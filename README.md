@@ -26,6 +26,9 @@ Frontend
   * Simple version of UI
   * Figure out what data UI needs from the server
 3. Implement back-end
+  * install virtualenv
+  * install flask
+  * serve index.html at /
 
 # Plan
 
