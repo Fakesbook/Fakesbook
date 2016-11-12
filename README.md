@@ -16,7 +16,10 @@ The data handled by this webapp should be encrypted in transit and at rest as it
 3. Implement back-end
   * install virtualenv
   * install flask
-  * serve index.html at /
+  * serve index.html at / (GET request)
+  * user add (POST request) -> respond w/graph json
+  * friend request (POST request) -> respond w/ {yes/no, graph/null}
+  * 
 
 # Plan
 
