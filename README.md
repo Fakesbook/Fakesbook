@@ -9,6 +9,18 @@ The data handled by this webapp should be encrypted in transit and at rest as it
 
 # TODO
 
+Frontend
+========
+* json format
+  * read
+  * write
+* set up graph
+  * toggle graph for who can see my data
+* pop up with images, data
+  * on click of node
+* Control Panel Layout
+* registration / friend requests
+
 1. Draw 1st-round architecture diagram of the system
 2. Implement front-end
   * Simple version of UI
