@@ -31,7 +31,6 @@ Frontend
   * serve index.html at / (GET request)
   * user add (POST request) -> respond w/graph json
   * friend request (POST request) -> respond w/ {yes/no, graph/null}
-  * 
 
 # Plan
 

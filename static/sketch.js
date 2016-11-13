@@ -5,11 +5,11 @@ var radius
 
 var dictionary = {};
 var circleLocations = [];
-var color = {};
+var colorForCircle = {};
 var img;
 
 function preload(){
-   //img = loadImage("assets/puppy.jpg");
+   img = loadImage("/static/puppy.jpg");
 }
 
 function setup() {
@@ -21,7 +21,7 @@ function setup() {
    createCanvas(screenSize, screenSize);
    for(i = 0; i < number; i++) {
       dictionary[i] = [];
-      color[i] = [255, 255/number * i, 203];
+      colorForCircle[i] = [255, 255/number * i, 203];
    }
 }
 
@@ -49,23 +49,20 @@ function draw() {
    addLine(1, 8);
    for(i = 0; i < number; i++) {
       if (dictionary[i].length > 1) {
-         color[i] = [0, 255, 255];
+         colorForCircle[i] = [0, 255, 255];
       }
       x = convertX(i);
       y = convertY(i);
       circleLocations.push([x, y]);
-      fill(color[i][0], color[i][1], color[i][2]);
+      fill(colorForCircle[i][0], colorForCircle[i][1], colorForCircle[i][2]);
       ellipse(x,y, radius, radius);
-   }
-
-   //image(img, 0, 0, puppy.width, puppy.height, 0, 0, 300);
-  
+   } 
 }
 
 function mouseClicked() {
    for (i = 0; i < circleLocations.length; i++) {
       if(dist(mouseX, mouseY, circleLocations[i][0], circleLocations[i][1]) < radius/2) {
-         color[i] = [255/number * i, 0, 255];
+         colorForCircle[i] = [255/number * i, 0, 255];
       }
    }
 }
