@@ -1,16 +1,11 @@
 var screenSize;
 var number;
 var circleSize;
-var radius
+var radius;
 
-var dictionary = {};
+var lines = {};
 var circleLocations = [];
 var colorForCircle = {};
-var img;
-
-function preload(){
-   img = loadImage("/static/puppy.jpg");
-}
 
 function setup() {
    screenSize = 600;
@@ -20,7 +15,7 @@ function setup() {
 
    createCanvas(screenSize, screenSize);
    for(i = 0; i < number; i++) {
-      dictionary[i] = [];
+      lines[i] = [];
       colorForCircle[i] = [255, 255/number * i, 203];
    }
 }
@@ -34,8 +29,8 @@ function convertY(ndx) {
 }
 
 function addLine(ndx1, ndx2) {
-   dictionary[ndx1].push(ndx2);
-   dictionary[ndx2].push(ndx1);
+   lines[ndx1].push(ndx2);
+   lines[ndx2].push(ndx1);
    x1 = convertX(ndx1);
    y1 = convertY(ndx1);
    x2 = convertX(ndx2);
@@ -48,12 +43,12 @@ function draw() {
    addLine(0, 10);
    addLine(1, 8);
    for(i = 0; i < number; i++) {
-      if (dictionary[i].length > 1) {
-         colorForCircle[i] = [0, 255, 255];
-      }
       x = convertX(i);
       y = convertY(i);
       circleLocations.push([x, y]);
+      if (lines[i].length > 1) {
+         colorForCircle[i] = [0, 255, 255];
+      }
       fill(colorForCircle[i][0], colorForCircle[i][1], colorForCircle[i][2]);
       ellipse(x,y, radius, radius);
    } 
