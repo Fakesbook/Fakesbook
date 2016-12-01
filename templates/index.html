@@ -1,6 +1,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
+
+  <!-- p5 stuff -->
   <script language="javascript" type="text/javascript" src="/static/lib/p5.js"></script>
   <!-- uncomment lines below to include extra p5 libraries -->
   <!--<script language="javascript" src="/static/lib/p5.dom.js"></script>-->
@@ -8,8 +10,24 @@
   <script language="javascript" type="text/javascript" src="/static/sketch.js"></script>
   <!-- this line removes any default padding and style. you might only need one of these values set. -->
   <style> body {padding: 0; margin: 0;} </style>
+  <!-- end p5 stuff -->
+
+  <link rel="stylesheet" type="text/css" href="/static/modal.css">
 </head>
 
 <body style="background-size: cover;" background="/static/puppy.jpg">
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <form method="post" action="/login/">
+          <label for="name"><h3>Name</h3></label>
+          <input type="text" name="name">
+          <label for="password"><h3>Password</h3></label>
+          <input type="password" name="password">
+          <label for="submit"><h3></h3></label>
+          <input id="loginSubmit" type="submit" value="Submit">
+        </form> 
+    </div>
+  </div>
+  <script src="/static/loginModal.js"></script>
 </body>
 </html>
