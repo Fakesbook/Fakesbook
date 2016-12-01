@@ -11,7 +11,6 @@ debug = True
 @app.route('/')
 def home():
    return render_template('index.html', authed="username" in session)
-   #return render_template('home.html')
 
 @app.route('/d3/')
 def demo():
@@ -23,6 +22,11 @@ def login():
    password = request.form['password']
    session['username'] = username
    return render_template("login.html", u=username, p=password)
+
+@app.route('/logout/')
+def logout():
+   session.pop("username")
+   return redirect("/")
 
 if __name__ == '__main__':
     app.run(debug=debug, port=8080)    
