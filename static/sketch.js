@@ -8,43 +8,33 @@ var circleLocations = [];
 var colorForCircle = {};
 
 function setup() {
-   screenSize = 600;
    circleSize = 400;
    number = 20;
    radius = 50;
 
-   createCanvas(screenSize, screenSize);
+   createCanvas(windowWidth - 50, windowHeight - 50);
    for(i = 0; i < number; i++) {
       lines[i] = [];
       colorForCircle[i] = [255, 255/number * i, 203];
    }
 }
 
+function windowResized() {
+    resizeCanvas(windowWidth - 50, windowHeight - 50);
+}
+
 function convertX(ndx) {
-   return screenSize/2 + circleSize/2 * cos(ndx * TWO_PI/number);
+   return windowWidth/2 + circleSize/2 * cos(ndx * TWO_PI/number);
 }
 
 function convertY(ndx) {
-   return screenSize/2 + circleSize/2 * sin(ndx * TWO_PI/number);
-}
-
-function addLine(ndx1, ndx2) {
-   lines[ndx1].push(ndx2);
-   lines[ndx2].push(ndx1);
-   x1 = convertX(ndx1);
-   y1 = convertY(ndx1);
-   x2 = convertX(ndx2);
-   y2 = convertY(ndx2);
-   line(x1, y1, x2, y2);
+   return windowHeight/2 + circleSize/2 * sin(ndx * TWO_PI/number);
 }
 
 function draw() {
-   addLine(0, 5);
-   addLine(0, 10);
-   addLine(1, 8);
    for(i = 0; i < number; i++) {
       x = convertX(i);
-      y = convertY(i);
+      y = convertY(i)/2;
       circleLocations.push([x, y]);
       if (lines[i].length > 1) {
          colorForCircle[i] = [0, 255, 255];
