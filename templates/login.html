@@ -1,6 +1,14 @@
-<html>
-  <body>
+{% extends 'base.html' %}
+
+{% block body %}
     <h1>Welcome, {{ u }}!</h1>
     <h3>Your password is {{ p }}</h3>
-  </body>
-</html>
+{% endblock %}
+{% block script %}
+<script>
+  function back() {
+    window.location = "/";
+  }
+  setTimeout(back, 3000);
+</script>
+{% endblock %}

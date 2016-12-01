@@ -11,6 +11,10 @@
   stroke-width: 2px;
 }
 
+.node text {
+  font: 32px helvetica;
+}
+
 </style>
 {% endblock %}
 {% block script %}
@@ -49,7 +53,7 @@ var color = d3.scale.category20();
 //Set up the force layout
 var force = d3.layout.force()
     .charge(-120)
-    .linkDistance(100)
+    .linkDistance(180)
     .size([width, height]);
 
 //Read the data from the mis element 
@@ -72,19 +76,25 @@ var link = svg.selectAll(".link")
 
 var nodeRadius = 20;
 
-//Do the same with the circles for the nodes - no 
+//Do the same with the circles for the nodes
 var node = svg.selectAll(".node")
     .data(graph.nodes)
-    .enter().append("circle")
+    .enter().append("g")
     .attr("class", "node")
+    .call(force.drag)
+    .on('dblclick', connectedNodes);
+node.append("circle")
     .attr("r", nodeRadius)
     .style("fill", function (d) {
-    return color(d.group);
-})
-    .call(force.drag)
-     .on('dblclick', connectedNodes);
+        return color(d.group);
+    })
+node.append("text")
+    .attr("dx", nodeRadius + 4)
+    .attr("dy", 10)
+    .text(function(d) { return d.id })
+    .style("stroke", "black");
 
-var padding = 4, // separation between circles
+var padding = 120, // separation between circles
     radius=nodeRadius;
 function collide(alpha) {
   var quadtree = d3.geom.quadtree(graph.nodes);
@@ -168,6 +178,18 @@ force.on("tick", function () {
         return d.y;
     });
     node.each(collide(0.5));
+    d3.selectAll("circle").attr("cx", function (d) {
+        return d.x;
+    })
+        .attr("cy", function (d) {
+        return d.y;
+    });
+    d3.selectAll("text").attr("x", function (d) {
+        return d.x;
+    })
+        .attr("y", function (d) {
+        return d.y;
+    });
 });
 </script>
 {% endblock %}

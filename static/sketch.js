@@ -24,11 +24,11 @@ function windowResized() {
 }
 
 function convertX(ndx) {
-   return windowWidth/2 + circleSize/2 * cos(ndx * TWO_PI/number);
+   return windowWidth/2 + circleSize/2 * sin(ndx * TWO_PI/number);
 }
 
 function convertY(ndx) {
-   return windowHeight/2 + circleSize/2 * sin(ndx * TWO_PI/number);
+   return windowHeight/2 + circleSize/2 * cos(ndx * TWO_PI/number);
 }
 
 function draw() {

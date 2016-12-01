@@ -13,6 +13,9 @@
   <link rel="stylesheet" type="text/css" href="/static/modal.css">
 {% endblock %}
 {% block body %}
+{% if authed %}
+<a href="/logout/"><button>Logout</button></a>
+{% endif %}
   <div id="myModal" class="modal">
     <div class="modal-content">
       <form method="post" action="/login/">
