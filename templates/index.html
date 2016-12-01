@@ -1,21 +1,18 @@
-<html>
-<head>
-  <meta charset="UTF-8">
-
-  <!-- p5 stuff -->
-  <script language="javascript" type="text/javascript" src="/static/lib/p5.js"></script>
-  <!-- uncomment lines below to include extra p5 libraries -->
-  <!--<script language="javascript" src="/static/lib/p5.dom.js"></script>-->
-  <!--<script language="javascript" src="/static/lib/p5.sound.js"></script>-->
+{% extends 'base.html' %}
+{% block head %}
+    <!-- p5 stuff -->
+    <script language="javascript" type="text/javascript" src="/static/lib/p5.js"></script>
+    <!-- uncomment lines below to include extra p5 libraries -->
+    <!--<script language="javascript" src="/static/lib/p5.dom.js"></script>-->
+    <!--<script language="javascript" src="/static/lib/p5.sound.js"></script>-->
+    <script language="javascript" type="text/javascript" src="/static/sketch.js"></script>
+    <!-- this line removes any default padding and style. you might only need one of these values set. -->
+    <style> body {padding: 0; margin: 0;} </style>
+    <!-- end p5 stuff -->
   <script language="javascript" type="text/javascript" src="/static/sketch.js"></script>
-  <!-- this line removes any default padding and style. you might only need one of these values set. -->
-  <style> body {padding: 0; margin: 0;} </style>
-  <!-- end p5 stuff -->
-
   <link rel="stylesheet" type="text/css" href="/static/modal.css">
-</head>
-
-<body style="background-size: cover;" background="/static/puppy.jpg">
+{% endblock %}
+{% block body %}
   <div id="myModal" class="modal">
     <div class="modal-content">
       <form method="post" action="/login/">
@@ -28,6 +25,15 @@
         </form> 
     </div>
   </div>
-  <script src="/static/loginModal.js"></script>
-</body>
-</html>
+{% endblock %}
+{% block script %}
+<script>
+function refresh() {
+    this.reload(false);
+}
+//setInterval(refresh.bind(location), 3000);
+</script>
+{% if not authed %}
+<script src="/static/loginModal.js"></script>
+{% endif %}
+{% endblock %}
