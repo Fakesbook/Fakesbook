@@ -1,11 +1,38 @@
-from os import environ
+from os import environ, urandom
+from hmac import HMAC as hmac, compare_digest 
+from hashlib import sha256
+from base64 import b64encode, b64decode
 from flask import Flask, request, render_template, session, redirect
 
 import sqlite3
-conn = sqlite3.connect('app.db')
+conn = sqlite3.connect('app.db', check_same_thread=False)
+
+def compare_passwords(a, b):
+   """ VERY safely compare passwords """
+   try:
+      pw = b64encode(urandom(32))
+      return compare_digest(hmac(pw, a.encode(), sha256).hexdigest(),
+            hmac(pw, b.encode(), sha256).hexdigest())
+   except UnicodeEncodeError:
+      return False
+
+c = conn.cursor()
+c.execute("""DROP TABLE IF EXISTS Users""")
+c.execute("""
+   CREATE TABLE Users (
+      id integer primary key,
+      username text unique,
+      password text,
+      image blob,
+      birthdate text,
+      fav_color text,
+      secret_crush text
+   )""")
+c.execute("""insert into Users(username, password) values ('max', 'foo')""")
+conn.commit()
 
 app = Flask(__name__)
-app.secret_key = environ['SECRET_KEY']
+app.secret_key = b64decode(environ['SECRET_KEY'])
 debug = True
 
 @app.route('/')
@@ -18,10 +45,24 @@ def demo():
 
 @app.route('/login/', methods=["GET", "POST"])
 def login():
+   if request.method == 'POST':
+      username = request.form['name']
+      password = request.form['password']
+      user_pw = c.execute("""
+         SELECT password FROM Users
+         WHERE username=? LIMIT 1""", (username,)).fetchone()
+      if user_pw and compare_passwords(password, user_pw[0]):
+         session['username'] = username
+         return render_template("login.html", u=username, p=password)
+   return redirect('/')
+
+@app.route('/register/', methods=["POST"])
+def register():
    username = request.form['name']
    password = request.form['password']
-   session['username'] = username
-   return render_template("login.html", u=username, p=password)
+   c = conn.cursor()
+   c.execute("""INSERT INTO Users VALUES (?, ?)""", (username, password))
+   conn.commit()
 
 @app.route('/logout/')
 def logout():
