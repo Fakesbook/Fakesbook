@@ -22,6 +22,7 @@
 <script type="application/json" id="data">
 {
     "nodes": [
+        {"id": "Me", "group": 0},
         {"id": "Alice", "group": 1},
         {"id": "Eve", "group": 2},
         {"id": "Bob", "group": 3},
@@ -30,17 +31,26 @@
     ],
     "links": [
         {"source": 0, "target": 1, "value": 10},
-        {"source": 0, "target": 3, "value": 10},
-        {"source": 1, "target": 2, "value": 10},
-        {"source": 2, "target": 3, "value": 10},
-        {"source": 4, "target": 2, "value": 10}
+        {"source": 2, "target": 3, "value": 10}
     ]
 }    
 </script>
 <script>
+// Utility for adding event handlers
+var addEvent = function(object, type, callback) {
+    if (object == null || typeof(object) == 'undefined') return;
+    if (object.addEventListener) {
+        object.addEventListener(type, callback, false);
+    } else if (object.attachEvent) {
+        object.attachEvent("on" + type, callback);
+    } else {
+        object["on"+type] = callback;
+    }
+};
+
 //Constants for the SVG
-var width = 900,
-    height = 600;
+var width = window.innerWidth,
+    height = window.innerHeight;
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select("body").append("svg")
@@ -83,11 +93,13 @@ var node = svg.selectAll(".node")
     .attr("class", "node")
     .call(force.drag)
     .on('dblclick', connectedNodes);
+
 node.append("circle")
     .attr("r", nodeRadius)
     .style("fill", function (d) {
         return color(d.group);
-    })
+    });
+
 node.append("text")
     .attr("dx", nodeRadius + 4)
     .attr("dy", 10)
@@ -96,6 +108,7 @@ node.append("text")
 
 var padding = 120, // separation between circles
     radius=nodeRadius;
+
 function collide(alpha) {
   var quadtree = d3.geom.quadtree(graph.nodes);
   return function(d) {
@@ -156,6 +169,12 @@ function connectedNodes() {
     }
 }
 
+for (i = 0; i < force.nodes().length; ++i) {
+    if (force.nodes()[i].group == 0) {
+        force.nodes()[i].fixed = true;
+    }
+}
+
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
 force.on("tick", function () {
     link.attr("x1", function (d) {
@@ -172,18 +191,27 @@ force.on("tick", function () {
     });
 
     node.attr("cx", function (d) {
+        if (d.group == 0) {
+            return width/2;
+        }
         return d.x;
     })
         .attr("cy", function (d) {
+        if (d.group == 0) {
+            return height/2;
+        }
         return d.y;
     });
+
     node.each(collide(0.5));
+
     d3.selectAll("circle").attr("cx", function (d) {
         return d.x;
     })
         .attr("cy", function (d) {
         return d.y;
     });
+
     d3.selectAll("text").attr("x", function (d) {
         return d.x;
     })
