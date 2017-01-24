@@ -17,18 +17,19 @@ def compare_passwords(a, b):
       return False
 
 c = conn.cursor()
-c.execute("""DROP TABLE IF EXISTS Users""")
+c.execute("""DROP TABLE IF EXISTS User""")
 c.execute("""
-   CREATE TABLE Users (
+   CREATE TABLE User (
       id integer primary key,
       username text unique,
       password text,
       image blob,
       birthdate text,
-      fav_color text,
-      secret_crush text
+      phone text,
+      fav_color text
    )""")
-c.execute("""insert into Users(username, password) values ('max', 'foo')""")
+
+c.execute("""insert into User(username, password) values ('max', 'foo')""")
 conn.commit()
 
 app = Flask(__name__)
@@ -49,7 +50,7 @@ def login():
       username = request.form['name']
       password = request.form['password']
       user_pw = c.execute("""
-         SELECT password FROM Users
+         SELECT password FROM User
          WHERE username=? LIMIT 1""", (username,)).fetchone()
       if user_pw and compare_passwords(password, user_pw[0]):
          session['username'] = username
@@ -61,13 +62,20 @@ def register():
    username = request.form['name']
    password = request.form['password']
    c = conn.cursor()
-   c.execute("""INSERT INTO Users VALUES (?, ?)""", (username, password))
+   c.execute("""INSERT INTO User VALUES (?, ?)""", (username, password))
    conn.commit()
 
 @app.route('/logout/')
 def logout():
    session.pop("username")
    return redirect("/")
+
+@app.route('/users/<name>')
+def user_info(name):
+    user = c.execute("""SELECT * from User where username=? LIMIT 1""",
+                        (name,)).fetchone()
+    print(user) # TODO remove
+    return render_template("user.html", user=user)
 
 if __name__ == '__main__':
     app.run(debug=debug, port=8080)    
