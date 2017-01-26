@@ -24,6 +24,10 @@ svg {
     background-color: white;
 }
 
+#panel #bottom {
+    margin: 0;
+}
+
 </style>
 {% endblock %}
 {% block script %}
@@ -57,9 +61,18 @@ var addEvent = function(object, type, callback) {
     }
 };
 
+d3.select("body").append("div")
+    .attr("id", "panel")
+    .attr("style", "float:right;")
+    .attr("width", Math.max(140, window.innerWidth*0.2))
+    .attr("height", window.innerHeight);
+
+var panel = document.getElementById("panel");
+panel.innerHTML = "<h3>Profile info goes here</h3>";
+
 //Constants for the SVG
-var width = Math.max(window.innerWidth*0.8, 100);
-    height = Math.max(window.innerHeight*0.8, 60);
+var width = Math.max(window.innerWidth*0.8, 140);
+    height = Math.max(window.innerHeight*0.8, 90);
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select("body").append("svg")
@@ -245,5 +258,14 @@ force.on("tick", function () {
         return d.y;
     });
 });
+
+d3.select("body").append("div")
+    .attr("id", "bottom")
+    .attr("width", window.innerWidth)
+    .attr("height", Math.max(90, window.innerHeight*0.2));
+
+var bottom = document.getElementById("bottom");
+bottom.innerHTML = "<h3>Privacy settings panel goes here</h3>";
+
 </script>
 {% endblock %}
