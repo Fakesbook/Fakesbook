@@ -63,19 +63,21 @@ var addEvent = function(object, type, callback) {
 
 d3.select("body").append("div")
     .attr("id", "panel")
-    .attr("style", "float:right;")
+    .attr("style", "float:right;display:inline-block")
     .attr("width", Math.max(140, window.innerWidth*0.2))
     .attr("height", window.innerHeight);
 
 var panel = document.getElementById("panel");
 panel.innerHTML = "<h3>Profile info goes here</h3>";
 
+
 //Constants for the SVG
-var width = Math.max(window.innerWidth*0.8, 140);
-    height = Math.max(window.innerHeight*0.8, 90);
+var width = window.innerWidth*0.8;
+var height = window.innerHeight*0.8;
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select("body").append("svg")
+    .attr("style", "overflow:auto;")
     .attr("width", width)
     .attr("height", height)
     .call(d3.behavior.zoom().on("zoom", function () {
@@ -93,10 +95,6 @@ var force = d3.layout.force()
     .linkDistance(180)
     .size([width, height]);
 
-//Read the data from the mis element 
-    //.on("drag", function(d) {
-      //  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-    //})
 var drag = force.drag()
     .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
 
@@ -257,6 +255,7 @@ force.on("tick", function () {
         return d.y;
     });
 });
+
 
 d3.select("body").append("div")
     .attr("id", "bottom")
