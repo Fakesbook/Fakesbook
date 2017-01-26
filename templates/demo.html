@@ -68,6 +68,7 @@ var svg = d3.select("body").append("svg")
     .call(d3.behavior.zoom().on("zoom", function () {
         svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
     }))
+    .on("dblclick.zoom", null)
     .append("g");
 
 //Set up the colour scale
@@ -105,12 +106,19 @@ var node = svg.selectAll(".node")
     .enter().append("g")
     .attr("class", "node")
     .call(force.drag)
+        .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
+    .on('click', highlightNode)
     .on('dblclick', connectedNodes);
 
 node.append("circle")
     .attr("r", nodeRadius)
     .style("fill", function (d) {
-        return color(d.group);
+        if(d.id == clicked) {
+            return color(7);
+        }
+        else {
+            return color(d.group);
+        }
     });
 
 node.append("text")
@@ -148,6 +156,11 @@ function collide(alpha) {
   };
 }
 
+var clicked;
+function highlightNode() {
+    d = d3.select(this).node().__data__;
+    clicked=d.id;
+}
 //Toggle stores whether the highlighting is on
 var toggle = 0;
 //Create an array logging what is connected to what
