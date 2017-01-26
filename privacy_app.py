@@ -20,13 +20,14 @@ c = conn.cursor()
 c.execute("""DROP TABLE IF EXISTS User""")
 c.execute("""
    CREATE TABLE User (
-      id integer primary key,
+      id integer primary key autoincrement,
       username text unique,
       password text,
-      image blob,
-      birthdate text,
-      phone text,
-      fav_color text
+      gender text defaul null,
+      image blob default null,
+      birthdate text default null,
+      phone text defaul null,
+      fav_color text default null
    )""")
 
 c.execute("""insert into User(username, password) values ('max', 'foo')""")
@@ -62,15 +63,16 @@ def register():
    username = request.form['name']
    password = request.form['password']
    c = conn.cursor()
-   c.execute("""INSERT INTO User VALUES (?, ?)""", (username, password))
+   c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""", (username, password))
    conn.commit()
+   return redirect("/login/")
 
 @app.route('/logout/')
 def logout():
    session.pop("username")
    return redirect("/")
 
-@app.route('/users/<name>')
+@app.route('/users/<name>/')
 def user_info(name):
     user = c.execute("""SELECT * from User where username=? LIMIT 1""",
                         (name,)).fetchone()

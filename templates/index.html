@@ -1,15 +1,5 @@
 {% extends 'base.html' %}
 {% block head %}
-    <!-- p5 stuff -->
-    <script language="javascript" type="text/javascript" src="/static/lib/p5.js"></script>
-    <!-- uncomment lines below to include extra p5 libraries -->
-    <!--<script language="javascript" src="/static/lib/p5.dom.js"></script>-->
-    <!--<script language="javascript" src="/static/lib/p5.sound.js"></script>-->
-    <script language="javascript" type="text/javascript" src="/static/sketch.js"></script>
-    <!-- this line removes any default padding and style. you might only need one of these values set. -->
-    <style> body {padding: 0; margin: 0;} </style>
-    <!-- end p5 stuff -->
-  <script language="javascript" type="text/javascript" src="/static/sketch.js"></script>
   <link rel="stylesheet" type="text/css" href="/static/modal.css">
 {% endblock %}
 {% block body %}
@@ -18,13 +8,15 @@
 {% endif %}
   <div id="myModal" class="modal">
     <div class="modal-content">
-      <form method="post" action="/login/">
+      <form id="form" method="post" action="/login/">
           <label for="name"><h3>Name</h3></label>
           <input type="text" name="name">
           <label for="password"><h3>Password</h3></label>
           <input type="password" name="password">
           <label for="submit"><h3></h3></label>
           <input id="loginSubmit" type="submit" value="Submit">
+          <label for="register"></label>
+          <input onclick="register()" id="registerSubmit" type="submit" value="Register">
         </form> 
     </div>
   </div>
@@ -34,7 +26,11 @@
 function refresh() {
     this.reload(false);
 }
-//setInterval(refresh.bind(location), 3000);
+function register() {
+    var e = document.getElementById("form");
+    e.action = "/register/";
+    e.submit();
+}
 </script>
 {% if not authed %}
 <script src="/static/loginModal.js"></script>
