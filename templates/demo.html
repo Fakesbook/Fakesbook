@@ -15,6 +15,15 @@
   font: 32px helvetica;
 }
 
+body {
+    margin: 0;
+    background-color: lightblue;
+}
+
+svg {
+    background-color: white;
+}
+
 </style>
 {% endblock %}
 {% block script %}
@@ -49,8 +58,8 @@ var addEvent = function(object, type, callback) {
 };
 
 //Constants for the SVG
-var width = window.innerWidth,
-    height = window.innerHeight;
+var width = Math.max(window.innerWidth*0.8, 100);
+    height = Math.max(window.innerHeight*0.8, 60);
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select("body").append("svg")
