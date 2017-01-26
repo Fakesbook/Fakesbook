@@ -94,6 +94,12 @@ var force = d3.layout.force()
     .size([width, height]);
 
 //Read the data from the mis element 
+    //.on("drag", function(d) {
+      //  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+    //})
+var drag = force.drag()
+    .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
+
 var data = document.getElementById('data').innerHTML;
 graph = JSON.parse(data);
 
@@ -118,8 +124,7 @@ var node = svg.selectAll(".node")
     .data(graph.nodes)
     .enter().append("g")
     .attr("class", "node")
-    .call(force.drag)
-        .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
+    .call(drag)
     .on('click', highlightNode)
     .on('dblclick', connectedNodes);
 
@@ -205,12 +210,6 @@ function connectedNodes() {
         node.style("opacity", 1);
         link.style("opacity", 1);
         toggle = 0;
-    }
-}
-
-for (i = 0; i < force.nodes().length; ++i) {
-    if (force.nodes()[i].group == 0) {
-        force.nodes()[i].fixed = true;
     }
 }
 
