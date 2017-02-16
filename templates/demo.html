@@ -35,16 +35,17 @@ svg {
 <script type="application/json" id="data">
 {
     "nodes": [
-        {"id":"Alice", "group":2},
-        {"id":"Eve", "group":3},
-        {"id":"Bob", "group":4},
-        {"id": "Me", "group": 1}
+        {% for user in users %}
+        {"id":"{{ user[0] }}", "group":"{{ user[1] }}"},
+        {% endfor %}
+        // figure out how to put a comma on the end unless it's the last element
     ],
     "links": [
-        {"source": 0, "target": 1, "value": 10},
-        {"source": 0, "target": 2, "value": 10},
-        {"source": 1, "target": 2, "value": 10},
-        {"source":3, "target":2, "value":10}
+        {% for src,targ in friends %}
+        {"source": {{ src }}, "target": {{ targ }}, "value": 10},
+        {% endfor %}
+        // figure out how to put a comma on the end unless it's the last element
+
     ]
 }    
 </script>

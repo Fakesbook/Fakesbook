@@ -32,11 +32,13 @@ def home():
 
 @app.route('/d3/')
 def graph():
+   if "username" not in session:
+       return redirect('/')
    c = conn.cursor()
-   users = c.execute("""SELECT username,gender,image,birthdate,phone,fav_color FROM User""").fetchall()
-   users.sort(key=lambda u: u[0]) # sort by SQL id
-   friends = {0:1} # TODO create demo friend connections, then real ones
-   return render_template('demo.html', users=users, len=len(users), friends=friends)
+   users = c.execute("""SELECT username,id,gender,image,birthdate,phone,fav_color FROM User""").fetchall()
+   users.sort(key=lambda u: u[1]) # sort by SQL id
+   friends = [(0,1), (0,2), (1,2), (3,2)]
+   return render_template('demo.html', users=users, friends=friends)
 
 @app.route('/login/', methods=["GET", "POST"])
 def login():
