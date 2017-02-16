@@ -37,6 +37,7 @@ def graph():
    c = conn.cursor()
    users = c.execute("""SELECT username,id,gender,image,birthdate,phone,fav_color FROM User""").fetchall()
    users.sort(key=lambda u: u[1]) # sort by SQL id
+   users = [("Max", 0), ("Alice", 1), ("Eve", 2), ("Bob", 3)]
    friends = [(0,1), (0,2), (1,2), (3,2)]
    return render_template('demo.html', users=users, friends=friends)
 
