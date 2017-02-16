@@ -35,9 +35,8 @@ def home():
 def graph():
    c = conn.cursor()
    users = c.execute("""SELECT username,gender,image,birthdate,phone,fav_color FROM User""").fetchall()
-   users.sort(lambda u: u.username)
+   users.sort(key=lambda u: u.username)
    friends = {0:1} # TODO create demo friend connections, then real ones
-   # TODO put example values back in templates/demo.html to see if iframe looks good
    return render_template('demo.html', users=users, len=len(users), friends=friends)
 
 @app.route('/login/', methods=["GET", "POST"])

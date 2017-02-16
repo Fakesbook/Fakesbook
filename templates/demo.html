@@ -35,16 +35,16 @@ svg {
 <script type="application/json" id="data">
 {
     "nodes": [
-        {% for user in users %}
-        {"id": "{{ user.username }}", "group": 0},
-        {% endfor %}
+        {"id":"Alice", "group":2},
+        {"id":"Eve", "group":3},
+        {"id":"Bob", "group":4},
         {"id": "Me", "group": 1}
     ],
     "links": [
-        {% for friend in friends %}
-        {"source": "{{ friend }}", "target": "{{ friends[friend] }}", "value": 10},
-        {% endfor %}
-        {"source": {{ len }}, "target": {{ len }}, "value": 0}
+        {"source": 0, "target": 1, "value": 10},
+        {"source": 0, "target": 2, "value": 10},
+        {"source": 1, "target": 2, "value": 10},
+        {"source":3, "target":1, "value":10}
     ]
 }    
 </script>
