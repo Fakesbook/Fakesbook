@@ -58,6 +58,17 @@ def login():
          return render_template("login.html", u=username, p=password)
    return redirect('/')
 
+@app.route('/accountsetup/', methods=["POST"])
+def accountsetup():
+    gender = request.form['gender']
+    favcolor = request.form['color']
+    birthday = request.form['birthday']
+    age = request.form['age']
+    phone = request.form['phone']
+    c = conn.cursor()
+    c.execute("""INSERT INTO User(gender, birthdate, phone, fav_color) values (?, ?, ?, ?)""", (gender, birthdat, phone, favcolor))
+    return redirect("/login")
+
 @app.route('/register/', methods=["POST"])
 def register():
    username = request.form['name']
@@ -65,7 +76,7 @@ def register():
    c = conn.cursor()
    c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""", (username, password))
    conn.commit()
-   return redirect("/login/")
+   return redirect("/accountsetup/")
 
 @app.route('/logout/')
 def logout():

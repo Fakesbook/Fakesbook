@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="/static/modal.css">
+{% endblock %}
+{% block body %}
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <form id="form" method="post" action="/user/">
+          <label for="gender"><h3>Gender</h3></label>
+          <input type="text" name="gender">
+          <label for="birthday"><h3>Birthday</h3></label>
+          <input type="date" name="birthday">
+          <label for="age"><h3>Age</h3></label>
+          <input type="number" name="age">
+          <label for="phone"><h3>Phone Number</h3></label>
+          <input type="tel" name="phone">
+          <label for="color"><h3>Favorite Color</h3></label>
+          <input type="text" name="color">
+          <label for="submit"><h3></h3></label>
+          <input id="loginSubmit" type="submit" value="Submit">
+        </form> 
+    </div>
+  </div>
+{% endblock %}
+{% block script %}
+<script>
+function refresh() {
+    this.reload(false);
+}
+</script>
+{% if not authed %}
+<script src="/static/loginModal.js"></script>
+{% endif %}
+{% endblock %}
