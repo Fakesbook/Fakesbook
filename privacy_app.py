@@ -37,8 +37,12 @@ def graph():
    c = conn.cursor()
    users = c.execute("""SELECT username,id,gender,image,birthdate,phone,fav_color FROM User""").fetchall()
    users.sort(key=lambda u: u[1]) # sort by SQL id
-   friends = [(0,1), (0,2), (1,2), (3,2)]
-   return render_template('demo.html', users=users, friends=friends)
+   friends = [(0,1), (0,2), (1,2), (3, 1)]
+   color = c.execute("""
+        SELECT fav_color FROM User
+        WHERE username=? LIMIT 1""", (session['username'],)).fetchone()
+   print(color)
+   return render_template('demo.html', users=users, friends=friends, name=session['username'], color=color, age=5, gender="f")
 
 @app.route('/login/', methods=["GET", "POST"])
 def login():

@@ -36,15 +36,19 @@ svg {
 {
     "nodes": [
         {% for user in users %}
-        {"id":"{{ user[0] }}", "group":"{{ user[1] }}"},
+        {"id":"{{ user[0] }}", "group":"{{ user[1] }}"}
+		{% if not loop.last %}
+			,
+		{% endif %}
         {% endfor %}
-        // figure out how to put a comma on the end unless it's the last element
     ],
     "links": [
         {% for src,targ in friends %}
-        {"source": {{ src }}, "target": {{ targ }}, "value": 10},
+        {"source": {{ src }}, "target": {{ targ }}, "value": 10}
+		{% if not loop.last %}
+			,
+		{% endif %}
         {% endfor %}
-        // figure out how to put a comma on the end unless it's the last element
 
     ]
 }    
@@ -69,7 +73,12 @@ d3.select("body").append("div")
     .attr("height", window.innerHeight);
 
 var panel = document.getElementById("panel");
-panel.innerHTML = "<h3>Profile info goes here</h3>";
+panel.innerHTML = "<h3>Profile info goes here " 
+    + "<br />Name: {{ name }}"
+    + "<br />Favorite Color: {{ color }}"
+    + "<br /> Age: {{ age }}"
+    + "<br /> Gender: {{ gender }}"
+    + "</h3>";
 
 
 //Constants for the SVG
