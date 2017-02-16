@@ -29,7 +29,7 @@ debug = True
 
 @app.route('/')
 def home():
-   return render_template('index.html', authed="username" in session)
+   return render_template('home.html', authed="username" in session)
 
 @app.route('/d3/')
 def graph():
@@ -73,7 +73,6 @@ def accountsetup():
 def addfriend():
     if not "username" in session:
        return redirect("/")
-    target = request.form
     # TODO
 
 @app.route('/register/', methods=["POST"])
