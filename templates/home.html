@@ -3,11 +3,6 @@
   <link rel="stylesheet" type="text/css" href="/static/modal.css">
 {% endblock %}
 {% block body %}
-{% if authed %}
-<div>
-    <a href="/logout/"><button>Logout</button></a>
-</div>
-{% endif %}
   <div id="myModal" class="modal">
     <div class="modal-content">
       <form id="form" method="post" action="/login/">
@@ -31,6 +26,9 @@
   </div>
   {% if authed %}
   <iframe width="100%" height="800px" src="/d3/"></iframe>
+  <div>
+    <a href="/logout/"><button>Logout</button></a>
+  </div>
   {% endif %}
 {% endblock %}
 {% block script %}
