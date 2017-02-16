@@ -80,7 +80,6 @@ def addfriend():
 @app.route('/register/', methods=["POST"])
 def register():
    if "username" in session:
-      flash("You're already logged in!")
       return redirect('/')
    username = request.form['name'].capitalize()
    password = request.form['password']
@@ -89,7 +88,7 @@ def register():
          SELECT username FROM User
          WHERE username=? LIMIT 1""", (username,)).fetchone()
    if user:
-      flash("Username is already taken.")
+      flash("That username is already taken.")
       return redirect("/")
    c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""", (username, bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())))
    conn.commit()
