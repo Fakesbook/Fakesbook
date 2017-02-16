@@ -4,11 +4,20 @@
 {% endblock %}
 {% block body %}
 {% if authed %}
-<a href="/logout/"><button>Logout</button></a>
+<div>
+    <a href="/logout/"><button>Logout</button></a>
+</div>
 {% endif %}
   <div id="myModal" class="modal">
     <div class="modal-content">
       <form id="form" method="post" action="/login/">
+          {% with messages = get_flashed_messages() %}
+          {% if messages %}
+          {% for m in messages %}
+          <p color="red">{{ m }}</p>
+          {% endfor %}
+          {% endif %}
+          {% endwith %}
           <label for="name"><h3>Name</h3></label>
           <input type="text" name="name">
           <label for="password"><h3>Password</h3></label>
@@ -20,6 +29,9 @@
         </form> 
     </div>
   </div>
+  {% if authed %}
+  <iframe width="100%" height="800px" src="/d3/"></iframe>
+  {% endif %}
 {% endblock %}
 {% block script %}
 <script>
