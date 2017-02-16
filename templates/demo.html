@@ -36,15 +36,21 @@ svg {
 {
     "nodes": [
         {% for user in users %}
+        {% if loop.last %}
+        {"id":"{{ user[0] }}", "group":"{{ user[1] }}"}
+        {% else %}
         {"id":"{{ user[0] }}", "group":"{{ user[1] }}"},
+        {% endif %}
         {% endfor %}
-        // figure out how to put a comma on the end unless it's the last element
     ],
     "links": [
         {% for src,targ in friends %}
+        {% if loop.last %}
+        {"source": {{ src }}, "target": {{ targ }}, "value": 10}
+        {% else %}
         {"source": {{ src }}, "target": {{ targ }}, "value": 10},
+        {% endif %}
         {% endfor %}
-        // figure out how to put a comma on the end unless it's the last element
 
     ]
 }    
