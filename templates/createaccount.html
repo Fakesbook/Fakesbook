@@ -3,21 +3,32 @@
   <link rel="stylesheet" type="text/css" href="/static/modal.css">
 {% endblock %}
 {% block body %}
-  <div id="myModal" class="modal">
+  <div class="container container-fluid" id="myModal" class="modal">
     <div class="modal-content">
       <form id="form" method="post" action="/accountsetup/">
           <label for="gender"><h3>Gender</h3></label>
+          <br />
           <input type="text" name="gender">
+          <br />
           <label for="birthday"><h3>Birthday</h3></label>
+          <br />
           <input type="date" name="birthday">
+          <br />
           <label for="age"><h3>Age</h3></label>
+          <br />
           <input type="number" name="age">
+          <br />
           <label for="phone"><h3>Phone Number</h3></label>
+          <br />
           <input type="tel" name="phone">
+          <br />
           <label for="color"><h3>Favorite Color</h3></label>
+          <br />
           <input type="text" name="color">
+          <br />
           <label for="submit"><h3></h3></label>
-          <input id="loginSubmit" type="submit" value="Submit">
+          <br />
+          <input id="loginSubmit" class="btn btn-info" type="submit" value="Submit">
         </form> 
     </div>
   </div>

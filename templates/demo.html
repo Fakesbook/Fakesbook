@@ -68,6 +68,7 @@ var addEvent = function(object, type, callback) {
 
 d3.select("body").append("div")
     .attr("id", "panel")
+    .attr("class", "container-fluid")
     .attr("style", "float:right;display:inline-block")
     .attr("width", Math.max(140, window.innerWidth*0.2))
     .attr("height", window.innerHeight);
@@ -269,6 +270,7 @@ force.on("tick", function () {
 
 d3.select("body").append("div")
     .attr("id", "bottom")
+    .attr("class", "container-fluid")
     .attr("width", window.innerWidth)
     .attr("height", Math.max(90, window.innerHeight*0.2));
 
