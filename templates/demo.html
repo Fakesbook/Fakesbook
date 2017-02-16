@@ -36,34 +36,18 @@ svg {
 {
     "nodes": [
         {% for user in users %}
-<<<<<<< HEAD
         {"id":"{{ user[0] }}", "group":"{{ user[1] }}"}
 		{% if not loop.last %}
 			,
 		{% endif %}
-=======
-        {% if loop.last %}
-        {"id":"{{ user[0] }}", "group":"{{ user[1] }}"}
-        {% else %}
-        {"id":"{{ user[0] }}", "group":"{{ user[1] }}"},
-        {% endif %}
->>>>>>> c78f6ea3a122cab2ff42778ae6028b70e6a44fee
         {% endfor %}
     ],
     "links": [
         {% for src,targ in friends %}
-<<<<<<< HEAD
         {"source": {{ src }}, "target": {{ targ }}, "value": 10}
 		{% if not loop.last %}
 			,
 		{% endif %}
-=======
-        {% if loop.last %}
-        {"source": {{ src }}, "target": {{ targ }}, "value": 10}
-        {% else %}
-        {"source": {{ src }}, "target": {{ targ }}, "value": 10},
-        {% endif %}
->>>>>>> c78f6ea3a122cab2ff42778ae6028b70e6a44fee
         {% endfor %}
 
     ]
