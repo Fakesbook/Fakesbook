@@ -9,6 +9,7 @@ import sqlite3
 conn = sqlite3.connect('app.db', check_same_thread=False)
 
 c = conn.cursor()
+c.execute("""DROP TABLE IF EXISTS User""")
 c.execute("""
    CREATE TABLE IF NOT EXISTS User (
       id integer primary key autoincrement,
@@ -20,6 +21,9 @@ c.execute("""
       phone text defaul null,
       fav_color text default null
    )""")
+c.execute("""INSERT INTO User(username) VALUES ("Alice")""")
+c.execute("""INSERT INTO User(username) VALUES ("Eve")""")
+c.execute("""INSERT INTO User(username) VALUES ("Bob")""")
 conn.commit()
 
 app = Flask(__name__)
