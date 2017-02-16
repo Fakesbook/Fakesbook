@@ -9,9 +9,8 @@ import sqlite3
 conn = sqlite3.connect('app.db', check_same_thread=False)
 
 c = conn.cursor()
-c.execute("""DROP TABLE IF EXISTS User""")
 c.execute("""
-   CREATE TABLE User (
+   CREATE TABLE IF NOT EXISTS User (
       id integer primary key autoincrement,
       username text unique,
       password text,
@@ -103,6 +102,8 @@ def user_info(name):
     c = conn.cursor()
     user = c.execute("""SELECT * from User where username=? LIMIT 1""",
                         (name.capitalize(),)).fetchone()
+    if user is None:
+        return redirect('/')
     return render_template("user.html", user=user)
 
 if __name__ == '__main__':
