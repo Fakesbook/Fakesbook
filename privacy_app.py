@@ -35,7 +35,7 @@ def home():
 def graph():
    c = conn.cursor()
    users = c.execute("""SELECT username,gender,image,birthdate,phone,fav_color FROM User""").fetchall()
-   users.sort(key=lambda u: u.username)
+   users.sort(key=lambda u: u[0]) # sort by SQL id
    friends = {0:1} # TODO create demo friend connections, then real ones
    return render_template('demo.html', users=users, len=len(users), friends=friends)
 
