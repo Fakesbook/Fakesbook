@@ -17,7 +17,7 @@ c.execute("""
       password text,
       gender text defaul null,
       image blob default null,
-      birthdate text default null,
+      age integer default null,
       phone text defaul null,
       fav_color text default null
    )""")
@@ -30,6 +30,14 @@ app = Flask(__name__)
 app.secret_key = b64decode(environ['SECRET_KEY'])
 debug = True
 
+def selectValue(value, user):
+    c = conn.cursor()
+#TODO assert v = a set of valid things
+    c.execute("""SELECT {v} FROM User WHERE username=? LIMIT 1""".\
+        format(v=value), (user,))
+    temp = c.fetchone()
+    return temp
+
 @app.route('/')
 def home():
    return render_template('home.html', authed="username" in session)
@@ -39,23 +47,22 @@ def graph():
    if "username" not in session:
        return redirect('/')
    c = conn.cursor()
-   users = c.execute("""SELECT username,id,gender,image,birthdate,phone,fav_color FROM User""").fetchall()
+   users = c.execute("""SELECT username,id,gender,image,phone,fav_color FROM User""").fetchall()
    users.sort(key=lambda u: u[1]) # sort by SQL id
    friends = [(0,1), (0,2), (1,2), (3, 1)]
-   color = c.execute("""
-        SELECT fav_color FROM User
-        WHERE username=? LIMIT 1""", (session['username'],)).fetchone()
+   username = session['username']
+   color = selectValue("fav_color", username)[0]
+   gender = selectValue("gender", username)[0]
+   age = selectValue("age", username)[0]
    print(color)
-   return render_template('demo.html', users=users, friends=friends, name=session['username'], color=color, age=5, gender="f")
+   return render_template('demo.html', users=users, friends=friends, name=session['username'], color=color, age=age, gender=gender)
 
 @app.route('/login/', methods=["GET", "POST"])
 def login():
    if request.method == 'POST' and "username" not in session:
       username = request.form['name'].capitalize()
       password = request.form['password']
-      user_pw = c.execute("""
-         SELECT password FROM User
-         WHERE username=? LIMIT 1""", (username,)).fetchone()
+      user_pw = selectValue("password", username)
       if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
          session['username'] = username
       else:
@@ -69,11 +76,10 @@ def accountsetup():
     if request.method == "POST":
         gender = request.form['gender']
         favcolor = request.form['color']
-        birthday = request.form['birthday']
         age = request.form['age']
         phone = request.form['phone']
         c = conn.cursor()
-        c.execute("""UPDATE User SET gender=?,birthdate=?,phone=?,fav_color=? WHERE username=?""", (gender,birthday,phone,favcolor,session['username']))
+        c.execute("""UPDATE User SET gender=?,phone=?,fav_color=? WHERE username=?""", (gender,phone,favcolor,session['username']))
         conn.commit()
         return redirect("/")
     return render_template("createaccount.html")
@@ -91,9 +97,7 @@ def register():
    username = request.form['name'].capitalize()
    password = request.form['password']
    c = conn.cursor()
-   user = c.execute("""
-         SELECT username FROM User
-         WHERE username=? LIMIT 1""", (username,)).fetchone()
+   user = selectValue("username", username)
    if user:
       flash("That username is already taken.")
       return redirect("/")
@@ -110,8 +114,9 @@ def logout():
 @app.route('/user/<name>/')
 def user_info(name):
     c = conn.cursor()
-    user = c.execute("""SELECT * from User where username=? LIMIT 1""",
-                        (name.capitalize(),)).fetchone()
+    user = selectValue("*", name.capitalize())
+    #user = c.execute("""SELECT * from User where username=? LIMIT 1""",
+                        #(name.capitalize(),)).fetchone()
     if user is None:
         return redirect('/')
     return render_template("user.html", user=user)
