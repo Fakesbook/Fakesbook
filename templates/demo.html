@@ -36,7 +36,11 @@ svg {
 {
     "nodes": [
         {% for user in users %}
+        {% if user[0] == name %}
+        {"id":"Me", "group":"{{ user[1] }}"}
+        {% else %}
         {"id":"{{ user[0] }}", "group":"{{ user[1] }}"}
+        {% endif %}
 		{% if not loop.last %}
 			,
 		{% endif %}
