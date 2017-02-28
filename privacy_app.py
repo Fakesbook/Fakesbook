@@ -64,6 +64,8 @@ def login():
       password = request.form['password']
       user_pw = selectValue("password", username)
       if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
+         print(user_pw)
+         print(user_pw[0])
          session['username'] = username
       else:
          flash("Incorrect username/password")
