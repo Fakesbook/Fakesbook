@@ -151,8 +151,10 @@ def controlStringToInt(string):
     if string == "friends":
         return 0
 
-@app.route("/control_change", methods=["POST"])
+@app.route("/control_change/", methods=["POST"])
 def control_change():
+    if "username" not in session:
+        return "", 400
     #values as color;age;gender
     values = request.form.getlist("control")
 
@@ -166,7 +168,7 @@ def control_change():
 
     user = session['username']
 
-#TODO insert permissions into user
+    #TODO insert permissions into user
 
     return "", 200
 
