@@ -70,21 +70,7 @@ var addEvent = function(object, type, callback) {
     }
 };
 
-d3.select("body").append("div")
-    .attr("id", "panel")
-    .attr("class", "container-fluid")
-    .attr("style", "float:right;display:inline-block")
-    .attr("width", Math.max(140, window.innerWidth*0.2))
-    .attr("height", window.innerHeight);
-
-var panel = document.getElementById("panel");
-panel.innerHTML = "<h3>Profile info goes here " 
-    + "<br />Name: {{ name }}"
-    + "<br />Favorite Color: {{ color }}"
-    + "<br /> Age: {{ age }}"
-    + "<br /> Gender: {{ gender }}"
-    + "</h3>";
-
+addEvent(window, "resize", function() {window.location = window.location;});
 
 //Constants for the SVG
 var width = window.innerWidth*0.8;
@@ -92,7 +78,7 @@ var height = window.innerHeight*0.8;
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select("body").append("svg")
-    .attr("style", "overflow:auto;")
+    .attr("style", "overflow:auto;display: inline-block;")
     .attr("width", width)
     .attr("height", height)
     .call(d3.behavior.zoom().on("zoom", function () {
@@ -271,15 +257,24 @@ force.on("tick", function () {
     });
 });
 
+d3.select("body").append("div")
+    .attr("id", "panel")
+    .attr("style", "display:inline-block;vertical-align:top;text-align:center;padding: 1%;width: " + window.innerWidth*0.2 + "px");
+
+var panel = document.getElementById("panel");
+panel.innerHTML = "<h3>Name: {{ name }}</h3>"
++ "<h4>Favorite Color: {{ color }}</h4>"
++ "<h4>Age: {{ age }}</h4>"
++ "<h4>Gender: {{ gender }}</h4>"
++ "</div>";
+
 
 d3.select("body").append("div")
     .attr("id", "bottom")
-    .attr("class", "container-fluid")
-    .attr("width", window.innerWidth)
-    .attr("height", Math.max(90, window.innerHeight*0.2));
+    .attr("style", "display:inline-block;vertical-align:bottom;padding-left: 1%;width: " + window.innerWidth + "px;height: " + window.innerHeight*0.18 + "px;");
 
 var bottom = document.getElementById("bottom");
-bottom.innerHTML = "<p>Who can see:</p>"
+bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<div style="width: 100%; overflow: hidden;">'
                     + '<div style="float: left;">'
                     + "<h4>Favorite Color</h4>"
