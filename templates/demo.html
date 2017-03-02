@@ -271,6 +271,42 @@ force.on("tick", function () {
     });
 });
 
+function controlChange() {
+    var xhr = new XMLHttpRequest();
+    var url = "/control_change";
+    var params = "control=";
+    xhr.open("POST", url, true);
+
+    var color = document.getElementById("color");
+    for (c in color.children) {
+        if (color[c] && color[c].checked == true) {
+            //params += "color=";
+            params += color[c].value;
+        }
+    }
+
+    var age = document.getElementById("age");
+    for (c in age.children) {
+        if (age[c] && age[c].checked) {
+            //params += ";age=";
+            params += ";";
+            params += age[c].value;
+        }
+    }
+
+    var gender = document.getElementById("gender");
+    for (c in gender.children) {
+        if (gender[c] && gender[c].checked) {
+            //params += ";gender=";
+            params += ";";
+            params += gender[c].value;
+        }
+    }
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    alert(params);
+    xhr.send(params);
+}
+
 
 d3.select("body").append("div")
     .attr("id", "bottom")
@@ -283,26 +319,26 @@ bottom.innerHTML = "<p>Who can see:</p>"
                     + '<div style="width: 100%; overflow: hidden;">'
                     + '<div style="float: left;">'
                     + "<h4>Favorite Color</h4>"
-                    + "<form>"
-                        + '<input type="radio" name="fav_color" value="friends">Only Friends<br>'
-                        + '<input type="radio" name="fav_color" value="fof">Friends of Friends<br>'
-                        + '<input type="radio" name="fav_color" value="everyone" checked>Everyone<br>'
+                    + '<form id="color">'
+                        + '<input type="radio" name="fav_color" value="friends" onclick=controlChange()>Only Friends<br>'
+                        + '<input type="radio" name="fav_color" value="fof" onclick=controlChange()>Friends of Friends<br>'
+                        + '<input type="radio" name="fav_color" value="everyone" onclick=controlChange() checked>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Age</h4>"
-                    + "<form>"
-                        + '<input type="radio" name="age" value="friends">Only Friends<br>'
-                        + '<input type="radio" name="age" value="fof">Friends of Friends<br>'
-                        + '<input type="radio" name="age" value="everyone" checked>Everyone<br>'
+                    + '<form id="age">'
+                        + '<input type="radio" name="age" value="friends" onclick=controlChange()>Only Friends<br>'
+                        + '<input type="radio" name="age" value="fof" onclick=controlChange()>Friends of Friends<br>'
+                        + '<input type="radio" name="age" value="everyone" onclick=controlChange() checked>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Gender</h4>"
-                    + "<form>"
-                        + '<input type="radio" name="gender" value="friends">Only Friends<br>'
-                        + '<input type="radio" name="gender" value="fof">Friends of Friends<br>'
-                        + '<input type="radio" name="gender" value="everyone" checked>Everyone<br>'
+                    + '<form id="gender">'
+                        + '<input type="radio" name="gender" value="friends" onclick=controlChange()>Only Friends<br>'
+                        + '<input type="radio" name="gender" value="fof" onclick=controlChange()>Friends of Friends<br>'
+                        + '<input type="radio" name="gender" value="everyone" onclick=controlChange() checked>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '</div>'

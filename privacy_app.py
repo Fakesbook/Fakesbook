@@ -19,7 +19,8 @@ c.execute("""
       image blob default null,
       age integer default null,
       phone text defaul null,
-      fav_color text default null
+      fav_color text default null,
+      permissions integer default 222
    )""")
 c.execute("""INSERT INTO User(username) VALUES ("Alice")""")
 c.execute("""INSERT INTO User(username) VALUES ("Eve")""")
@@ -141,6 +142,33 @@ def user_info(name):
     if user is None:
         return redirect('/')
     return render_template("user.html", user=user)
+
+def controlStringToInt(string):
+    if string == "everyone":
+        return 2
+    if string == "fof":
+        return 1
+    if string == "friends":
+        return 0
+
+@app.route("/control_change", methods=["POST"])
+def control_change():
+    #values as color;age;gender
+    values = request.form.getlist("control")
+
+    value_list = values[0].split(';')
+    print(value_list)
+    permissions = 0
+    for v in value_list:
+        permissions = permissions + controlStringToInt(v)
+        permissions = permissions * 10
+    permissions = permissions/10
+
+    user = session['username']
+
+#TODO insert permissions into user
+
+    return "", 200
 
 if __name__ == '__main__':
     app.run(debug=debug, port=8080)    
