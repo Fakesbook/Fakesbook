@@ -279,7 +279,34 @@ d3.select("body").append("div")
     .attr("height", Math.max(90, window.innerHeight*0.2));
 
 var bottom = document.getElementById("bottom");
-bottom.innerHTML = "<h3>Privacy settings panel goes here</h3>";
+bottom.innerHTML = "<p>Who can see:</p>"
+                    + '<div style="width: 100%; overflow: hidden;">'
+                    + '<div style="float: left;">'
+                    + "<h4>Favorite Color</h4>"
+                    + "<form>"
+                        + '<input type="radio" name="fav_color" value="friends">Only Friends<br>'
+                        + '<input type="radio" name="fav_color" value="fof">Friends of Friends<br>'
+                        + '<input type="radio" name="fav_color" value="everyone" checked>Everyone<br>'
+                    + '</form>'
+                    + '</div>'
+                    + '<div style="float:left; margin-left: 5%;">'
+                    + "<h4>Age</h4>"
+                    + "<form>"
+                        + '<input type="radio" name="age" value="friends">Only Friends<br>'
+                        + '<input type="radio" name="age" value="fof">Friends of Friends<br>'
+                        + '<input type="radio" name="age" value="everyone" checked>Everyone<br>'
+                    + '</form>'
+                    + '</div>'
+                    + '<div style="float:left; margin-left: 5%;">'
+                    + "<h4>Gender</h4>"
+                    + "<form>"
+                        + '<input type="radio" name="gender" value="friends">Only Friends<br>'
+                        + '<input type="radio" name="gender" value="fof">Friends of Friends<br>'
+                        + '<input type="radio" name="gender" value="everyone" checked>Everyone<br>'
+                    + '</form>'
+                    + '</div>'
+                    + '</div>'
+                        ;
 
 </script>
 {% endblock %}
