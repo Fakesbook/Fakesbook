@@ -49,7 +49,7 @@ def graph():
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
-    users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age FROM User""").fetchall()
+    users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age,permissions FROM User""").fetchall()
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
     try:
@@ -61,8 +61,10 @@ def graph():
     gender = me[2]
     color = me[5]
     age = me[6]
-    # print(color)
-    print(id, list(FRIENDS))
+    permissions = me[7]
+    print(permissions)
+#TODO convert permissions and pass to render_template
+    #print(id, list(FRIENDS))
     return render_template('demo.html', users=users, friends=list(FRIENDS), name=username, id=id, color=color, age=age, gender=gender)
 
 @app.route('/login/', methods=["POST"])
@@ -159,7 +161,6 @@ def control_change():
     values = request.form.getlist("control")
 
     value_list = values[0].split(';')
-    print(value_list)
     permissions = 0
     for v in value_list:
         permissions = permissions + controlStringToInt(v)
@@ -168,7 +169,9 @@ def control_change():
 
     user = session['username']
 
-    #TODO insert permissions into user
+    c = conn.cursor()
+    c.execute("""UPDATE User SET permissions=? WHERE username=?""", (permissions,user))
+    conn.commit()
 
     return "", 200
 
