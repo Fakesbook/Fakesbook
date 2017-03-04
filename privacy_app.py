@@ -64,8 +64,13 @@ def graph():
     permissions = me[7]
     print(permissions)
 #TODO convert permissions and pass to render_template
+    colorChecked = permissions//100
+    ageChecked = (permissions// 10) % 10
+    genderChecked = permissions % 10
     #print(id, list(FRIENDS))
-    return render_template('demo.html', users=users, friends=list(FRIENDS), name=username, id=id, color=color, age=age, gender=gender)
+    print(genderChecked)
+    print(ageChecked)
+    return render_template('demo.html', users=users, friends=list(FRIENDS), name=username, id=id, color=color, age=age, gender=gender, colorChecked=colorChecked, genderChecked=genderChecked, ageChecked=ageChecked)
 
 @app.route('/login/', methods=["POST"])
 def login():

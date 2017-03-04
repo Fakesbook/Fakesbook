@@ -313,25 +313,61 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<div style="float: left;">'
                     + "<h4>Favorite Color</h4>"
                     + '<form id="color">'
-                        + '<input type="radio" name="fav_color" value="friends" onclick=controlChange()>Only Friends<br>'
-                        + '<input type="radio" name="fav_color" value="fof" onclick=controlChange()>Friends of Friends<br>'
-                        + '<input type="radio" name="fav_color" value="everyone" onclick=controlChange() checked>Everyone<br>'
+                        + '<input type="radio" name="fav_color" value="friends" onclick=controlChange()' 
+                        {% if colorChecked == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Only Friends<br>'
+                        + '<input type="radio" name="fav_color" value="fof" onclick=controlChange()' 
+                        {% if colorChecked == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends<br>'
+                        + '<input type="radio" name="fav_color" value="everyone" onclick=controlChange()' 
+                        {% if colorChecked == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Age</h4>"
                     + '<form id="age">'
-                        + '<input type="radio" name="age" value="friends" onclick=controlChange()>Only Friends<br>'
-                        + '<input type="radio" name="age" value="fof" onclick=controlChange()>Friends of Friends<br>'
-                        + '<input type="radio" name="age" value="everyone" onclick=controlChange() checked>Everyone<br>'
+                        + '<input type="radio" name="age" value="friends" onclick=controlChange()'
+                        {% if ageChecked == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Only Friends<br>'
+                        + '<input type="radio" name="age" value="fof" onclick=controlChange()'
+                        {% if ageChecked == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends<br>'
+                        + '<input type="radio" name="age" value="everyone" onclick=controlChange()'
+                        {% if ageChecked == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Gender</h4>"
                     + '<form id="gender">'
-                        + '<input type="radio" name="gender" value="friends" onclick=controlChange()>Only Friends<br>'
-                        + '<input type="radio" name="gender" value="fof" onclick=controlChange()>Friends of Friends<br>'
-                        + '<input type="radio" name="gender" value="everyone" onclick=controlChange() checked>Everyone<br>'
+                        + '<input type="radio" name="gender" value="friends" onclick=controlChange()'
+                        {% if genderChecked == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Only Friends<br>'
+                        + '<input type="radio" name="gender" value="fof" onclick=controlChange()'
+                        {% if genderChecked == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends<br>'
+                        + '<input type="radio" name="gender" value="everyone" onclick=controlChange()'
+                        {% if genderChecked == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '</div>'
