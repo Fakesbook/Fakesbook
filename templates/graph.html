@@ -357,25 +357,61 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<div style="float: left;">'
                     + "<h4>Favorite Color</h4>"
                     + '<form id="color">'
-                        + '<input type="radio" name="fav_color" value="friends" onclick=controlChange()>Only Friends<br>'
-                        + '<input type="radio" name="fav_color" value="fof" onclick=controlChange()>Friends of Friends<br>'
-                        + '<input type="radio" name="fav_color" value="everyone" onclick=controlChange() checked>Everyone<br>'
+                        + '<input type="radio" name="fav_color" value="friends" onclick=controlChange()' 
+                        {% if perms["color"] == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Only Friends<br>'
+                        + '<input type="radio" name="fav_color" value="fof" onclick=controlChange()' 
+                        {% if perms["color"] == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends<br>'
+                        + '<input type="radio" name="fav_color" value="everyone" onclick=controlChange()' 
+                        {% if perms["color"] == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Age</h4>"
                     + '<form id="age">'
-                        + '<input type="radio" name="age" value="friends" onclick=controlChange()>Only Friends<br>'
-                        + '<input type="radio" name="age" value="fof" onclick=controlChange()>Friends of Friends<br>'
-                        + '<input type="radio" name="age" value="everyone" onclick=controlChange() checked>Everyone<br>'
+                        + '<input type="radio" name="age" value="friends" onclick=controlChange()'
+                        {% if perms["age"] == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Only Friends<br>'
+                        + '<input type="radio" name="age" value="fof" onclick=controlChange()'
+                        {% if perms["age"] == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends<br>'
+                        + '<input type="radio" name="age" value="everyone" onclick=controlChange()'
+                        {% if perms["age"] == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Gender</h4>"
                     + '<form id="gender">'
-                        + '<input type="radio" name="gender" value="friends" onclick=controlChange()>Only Friends<br>'
-                        + '<input type="radio" name="gender" value="fof" onclick=controlChange()>Friends of Friends<br>'
-                        + '<input type="radio" name="gender" value="everyone" onclick=controlChange() checked>Everyone<br>'
+                        + '<input type="radio" name="gender" value="friends" onclick=controlChange()'
+                        {% if perms["gender"] == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Only Friends<br>'
+                        + '<input type="radio" name="gender" value="fof" onclick=controlChange()'
+                        {% if perms["gender"] == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends<br>'
+                        + '<input type="radio" name="gender" value="everyone" onclick=controlChange()'
+                        {% if perms["gender"] == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone<br>'
                     + '</form>'
                     + '</div>'
                     + '</div>'

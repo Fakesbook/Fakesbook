@@ -59,7 +59,7 @@ def graph():
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
-    users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age FROM User""").fetchall()
+    users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age,permissions FROM User""").fetchall()
     friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
@@ -69,7 +69,13 @@ def graph():
         session.pop("username")
         return '', 400
     id = me[1]
-    return render_template('graph.html', users=users, friends=list(friends), name=username, id=id)
+    permissions = me[7]
+    perms = {
+        "color" : permissions//100,
+        "age"   : (permissions// 10) % 10,
+        "gender": permissions % 10
+    }
+    return render_template('graph.html', users=users, friends=list(friends), name=username, id=id, perms=perms)
 
 @app.route('/login/', methods=["POST"])
 def login():
@@ -127,6 +133,9 @@ def register():
    password = request.form['password']
    c = conn.cursor()
    user = selectValue("username", username)
+   if username == "":
+      flash("Can't have an empty username.")
+      return redirect("/")
    if username == "Me" or user:
       flash("That username is already taken.")
       return redirect("/")
@@ -173,7 +182,6 @@ def control_change():
     values = request.form.getlist("control")
 
     value_list = values[0].split(';')
-    print("Control values:", value_list)
     permissions = 0
     for v in value_list:
         permissions = permissions + controlStringToInt(v)
@@ -182,7 +190,9 @@ def control_change():
 
     user = session['username']
 
-    #TODO insert permissions into user
+    c = conn.cursor()
+    c.execute("""UPDATE User SET permissions=? WHERE username=?""", (permissions,user))
+    conn.commit()
 
     return "", 200
 
