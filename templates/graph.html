@@ -48,7 +48,7 @@ svg {
     ],
     "links": [
         {% for src,targ in friends %}
-        {"source": {{ src }}, "target": {{ targ }}, "value": 10}
+        {"source": {{ src-1 }}, "target": {{ targ-1 }}, "value": 10}
 		{% if not loop.last %}
 			,
 		{% endif %}
@@ -93,7 +93,7 @@ var color = d3.scale.category20();
 //Set up the force layout
 var force = d3.layout.force()
     .charge(-120)
-    .linkDistance(180)
+    .linkDistance(250)
     .size([width, height]);
 
 var drag = force.drag()
@@ -116,7 +116,7 @@ var link = svg.selectAll(".link")
     return Math.sqrt(d.value);
 });
 
-var nodeRadius = 20;
+var nodeRadius = 15;
 
 //Do the same with the circles for the nodes
 var node = svg.selectAll(".node")
@@ -130,12 +130,7 @@ var node = svg.selectAll(".node")
 node.append("circle")
     .attr("r", nodeRadius)
     .style("fill", function (d) {
-        if(d.id == clicked) {
-            return color(7);
-        }
-        else {
-            return color(d.group);
-        }
+        return color(d.group);
     });
 
 node.append("text")
@@ -174,12 +169,13 @@ function collide(alpha) {
 }
 
 var clicked;
-function highlightNode() {
-    d = d3.select(this).node().__data__;
-    clicked=d.id;
-}
 //Toggle stores whether the highlighting is on
 var toggle = 0;
+function highlightNode() {
+    d = d3.select(this).node().__data__;
+    panelUpdate(d.group);
+    clicked=d.id;
+}
 //Create an array logging what is connected to what
 var linkedByIndex = {};
 for (i = 0; i < graph.nodes.length; i++) {
@@ -188,13 +184,13 @@ for (i = 0; i < graph.nodes.length; i++) {
 graph.links.forEach(function (d) {
     linkedByIndex[d.source.index + "," + d.target.index] = 1;
 });
-//This function looks up whether a pair are neighbours
+//This function looks up whether a pair are neighbors
 function neighboring(a, b) {
     return linkedByIndex[a.index + "," + b.index];
 }
 function connectedNodes() {
     if (toggle == 0) {
-        //Reduce the opacity of all but the neighbouring nodes
+        //Reduce the opacity of all but the neighboring nodes
         d = d3.select(this).node().__data__;
         node.style("opacity", function (o) {
             return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
@@ -261,12 +257,60 @@ d3.select("body").append("div")
     .attr("id", "panel")
     .attr("style", "display:inline-block;vertical-align:top;text-align:center;padding: 1%;width: " + window.innerWidth*0.2 + "px");
 
+function friendRequest(i) {
+    var xhr = new XMLHttpRequest();
+    var url = "/addfriend/";
+    xhr.open("POST", url, true);
+    var params = "target=" + i;
+    xhr.onload = function () { 
+                    if (xhr.status == 200) {
+                        var b = document.getElementById("addfriend_button");
+                        b.style = "display:none;";
+                        location.reload();
+                    }};
+    xhr.onerror = function () { alert("Error, try again");};
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhr.send(params);
+}
+
 var panel = document.getElementById("panel");
-panel.innerHTML = "<h3>Name: {{ name }}</h3>"
-+ "<h4>Favorite Color: {{ color }}</h4>"
-+ "<h4>Age: {{ age }}</h4>"
-+ "<h4>Gender: {{ gender }}</h4>"
+panel.innerHTML = "<h3 id='profile_name'></h3>"
++ "<hr />"
++ "<h4 id='profile_color'></h4>"
++ "<h4 id='profile_age'></h4>"
++ "<h4 id='profile_gender'></h4>"
++ "<hr />"
++ '<button class="btn btn-success" style="display:none;" id="addfriend_button">Add Friend</button>'
 + "</div>";
+
+function panelUpdate(i) {
+    var xhr = new XMLHttpRequest();
+    var url = "/user/" + i;
+    xhr.open("GET", url, true);
+    xhr.onload = function() {
+                    var data = JSON.parse(xhr.responseText);
+                    var pname = document.getElementById("profile_name");
+                    var pcolor = document.getElementById("profile_color");
+                    var page = document.getElementById("profile_age");
+                    var pgender = document.getElementById("profile_gender");
+                    var pbutton = document.getElementById("addfriend_button");
+                    pname.innerText = data["name"];
+                    pcolor.innerText = "Favorite Color: " + data["color"];
+                    page.innerText = "Age: " + data["age"];
+                    pgender.innerText = "Gender: " + data["gender"];
+                    if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
+                        pbutton.style = "display:inline-block;"; 
+                        pbutton.onclick = function() { friendRequest(i) };
+                    }
+                    else {
+                        pbutton.style = "display:none;"; 
+                    }
+                };
+    xhr.onerror = function() { console.log("Error in panel update XHR");};
+    xhr.send(null);
+}
+
+panelUpdate("{{ id }}");
 
 function controlChange() {
     var xhr = new XMLHttpRequest();
