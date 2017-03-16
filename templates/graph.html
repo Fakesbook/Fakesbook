@@ -257,6 +257,10 @@ d3.select("body").append("div")
     .attr("id", "panel")
     .attr("style", "display:inline-block;vertical-align:top;text-align:center;padding: 1%;width: " + window.innerWidth*0.2 + "px");
 
+function imageUpload() {
+    alert("Option to upload new image here");
+}
+
 function friendRequest(i) {
     var xhr = new XMLHttpRequest();
     var url = "/addfriend/";
@@ -276,6 +280,8 @@ function friendRequest(i) {
 var panel = document.getElementById("panel");
 panel.innerHTML = "<h3 id='profile_name'></h3>"
 + "<hr />"
++ "<img id='profile_pic' src='' width='80%'></img>"
++ "<hr />"
 + "<h4 id='profile_color'></h4>"
 + "<h4 id='profile_age'></h4>"
 + "<h4 id='profile_gender'></h4>"
@@ -293,11 +299,19 @@ function panelUpdate(i) {
                     var pcolor = document.getElementById("profile_color");
                     var page = document.getElementById("profile_age");
                     var pgender = document.getElementById("profile_gender");
+                    var pimg = document.getElementById("profile_pic");
                     var pbutton = document.getElementById("addfriend_button");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
                     page.innerText = "Age: " + data["age"];
                     pgender.innerText = "Gender: " + data["gender"];
+                    pimg.src = "/static/images/" + data["image"];
+                    if (data["image"] == "none.png") {
+                        pimg.onclick = function() { imageUpload();};
+                    }
+                    else {
+                        pimg.onclick = function() {};
+                    }
                     if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
                         pbutton.style = "display:inline-block;"; 
                         pbutton.onclick = function() { friendRequest(i) };
