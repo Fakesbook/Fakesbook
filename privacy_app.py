@@ -17,14 +17,14 @@ c.execute("""
       username text unique,
       password text,
       gender text default null,
-      image blob default null,
+      image text default "none.png",
       age integer default null,
       phone text default null,
       fav_color text default null,
       permissions integer default 222
    )""")
-c.execute("""INSERT INTO User(username) VALUES ("Alice")""")
-c.execute("""INSERT INTO User(username) VALUES ("Eve")""")
+c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
+c.execute("""INSERT INTO User(username,image) VALUES ("Eve", "puppy.jpg")""")
 c.execute("""INSERT INTO User(username) VALUES ("Bob")""")
 c.execute("""DROP TABLE IF EXISTS Friend""")
 c.execute("""
@@ -159,12 +159,13 @@ def user_info(id):
     except:
         return json.dumps({}), 200
     c = conn.cursor()
-    user = c.execute("""SELECT username, fav_color, age, gender FROM User
+    user = c.execute("""SELECT username, fav_color, age, gender,image FROM User
                         where id=? LIMIT 1""", (int(id),)).fetchone()
     if user is None:
         return json.dumps({}), 200
     return json.dumps({"name":user[0], "color":user[1], 
-                        "age":user[2], "gender":user[3]}), 200
+                        "age":user[2], "gender":user[3],
+                        "image":user[4]}), 200
 
 def controlStringToInt(string):
     if string == "everyone":
