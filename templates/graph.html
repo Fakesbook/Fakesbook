@@ -306,7 +306,7 @@ function panelUpdate(i) {
                     page.innerText = "Age: " + data["age"];
                     pgender.innerText = "Gender: " + data["gender"];
                     pimg.src = "/static/images/" + data["image"];
-                    if (data["image"] == "none.png") {
+                    if (data["image"] == "none.png" && i == "{{ id }}") {
                         pimg.onclick = function() { imageUpload();};
                     }
                     else {
