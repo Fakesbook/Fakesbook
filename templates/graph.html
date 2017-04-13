@@ -145,7 +145,7 @@ var padding = 120, // separation between circles
 function collide(alpha) {
   var quadtree = d3.geom.quadtree(graph.nodes);
   return function(d) {
-    var rb = 2*radius + padding,
+        var rb = 2*radius + padding,
         nx1 = d.x - rb,
         nx2 = d.x + rb,
         ny1 = d.y - rb,
@@ -210,6 +210,14 @@ function connectedNodes() {
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
 force.on("tick", function () {
+    node.attr("id", function (d) {
+        if (d.id == "Me") {
+            d.fixed = true;
+            d.x = width/2;
+            d.y = height/2;
+        }
+    });
+
     link.attr("x1", function (d) {
         return d.source.x;
     })
@@ -224,17 +232,10 @@ force.on("tick", function () {
     });
 
     node.attr("cx", function (d) {
-        if (d.group == 0) {
-              //d.fixed = true;
-            return width/2;
-        }
         return d.x;
     })
         .attr("cy", function (d) {
-        if (d.group == 0) {
-            return height/2;
-        }
-        return d.y;
+            return d.y;
     });
 
     node.each(collide(0.5));
