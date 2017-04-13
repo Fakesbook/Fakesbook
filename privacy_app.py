@@ -1,10 +1,12 @@
-from os import environ, urandom
+from os import environ, urandom, path, remove as rm_file
 from hmac import HMAC as hmac, compare_digest 
 import json
 import bcrypt
 from hashlib import sha256
 from base64 import b64encode, b64decode
 from flask import Flask, request, render_template, session, redirect, flash
+from flask import send_from_directory
+from werkzeug.utils import secure_filename
 
 import sqlite3
 conn = sqlite3.connect('app.db', check_same_thread=False)
@@ -17,7 +19,7 @@ c.execute("""
       username text unique,
       password text,
       gender text default null,
-      image text default "none.png",
+      image text default "none",
       age integer default null,
       phone text default null,
       fav_color text default null,
@@ -39,9 +41,18 @@ c.execute("""
 c.execute("""INSERT INTO Friend(f1, f2) VALUES (1, 2), (1, 3), (2, 3), (3, 1)""")
 conn.commit()
 
+UPLOAD_FOLDER = "./uploads"
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+
 app = Flask(__name__)
 app.secret_key = b64decode(environ['SECRET_KEY'])
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 debug = True
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def selectValue(value, user):
     if value not in ["id", "username", "password", "gender", "image", "age", "phone", "fav_color"]:
@@ -166,6 +177,44 @@ def user_info(id):
     return json.dumps({"name":user[0], "color":user[1], 
                         "age":user[2], "gender":user[3],
                         "image":user[4]}), 200
+
+@app.route('/pic/<filename>')
+def profile_pic(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/profile_upload/', methods=['POST'])
+def profile_pic_upload():
+    if 'username' not in session or 'profile_pic' not in request.files:
+        return redirect('/d3/')
+    user = session['username']
+    file = request.files['profile_pic']
+    if file.filename == '':
+        return redirect('/d3/')
+    if file and allowed_file(file.filename):
+        fname = secure_filename(file.filename)
+        file.save(path.join(app.config['UPLOAD_FOLDER'], fname))
+        c = conn.cursor()
+        c.execute("""UPDATE User SET image=? WHERE username=? LIMIT 1""",
+                        (fname,user))
+        conn.commit() 
+    return redirect("/d3/")
+
+@app.route('/profile_pic_teardown/', methods=['POST'])
+def profile_pic_teardown():
+    if 'username' not in session:
+        return redirect('/d3/')
+    user = session['username']
+    c = conn.cursor()
+    try:
+        old_img = selectValue("image", user)[0]
+    except IndexError:
+        old_img = None
+    c.execute("""UPDATE User SET image=? WHERE username=? LIMIT 1""",
+                        ("none",user))
+    conn.commit()
+    if old_img:
+        rm_file(path.join(app.config["UPLOAD_FOLDER"], old_img))
+    return redirect('/d3/')
 
 def controlStringToInt(string):
     if string == "everyone":
