@@ -229,6 +229,7 @@ force.on("tick", function () {
 
     node.attr("cx", function (d) {
         if (d.group == 0) {
+              //d.fixed = true;
             return width/2;
         }
         return d.x;
