@@ -1,5 +1,6 @@
 from os import environ, urandom
 from hmac import HMAC as hmac, compare_digest 
+import json
 import bcrypt
 from hashlib import sha256
 from base64 import b64encode, b64decode
@@ -15,23 +16,32 @@ c.execute("""
       id integer primary key autoincrement,
       username text unique,
       password text,
-      gender text defaul null,
-      image blob default null,
+      gender text default null,
+      image text default "none.png",
       age integer default null,
-      phone text defaul null,
+      phone text default null,
       fav_color text default null,
       permissions integer default 222
    )""")
-c.execute("""INSERT INTO User(username) VALUES ("Alice")""")
-c.execute("""INSERT INTO User(username) VALUES ("Eve")""")
+c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
+c.execute("""INSERT INTO User(username,image) VALUES ("Eve", "puppy.jpg")""")
 c.execute("""INSERT INTO User(username) VALUES ("Bob")""")
+c.execute("""DROP TABLE IF EXISTS Friend""")
+c.execute("""
+   CREATE TABLE IF NOT EXISTS Friend (
+      id integer primary key autoincrement,
+      f1 integer not null,
+      f2 integer not null,
+      foreign key (f1) references User(id),
+      foreign key (f2) references User(id),
+      constraint friendship unique (f1, f2)
+   )""")
+c.execute("""INSERT INTO Friend(f1, f2) VALUES (1, 2), (1, 3), (2, 3), (3, 1)""")
 conn.commit()
 
 app = Flask(__name__)
 app.secret_key = b64decode(environ['SECRET_KEY'])
 debug = True
-
-FRIENDS = set([(0,1), (0,2), (1,2), (3, 1)]) # TODO move to database
 
 def selectValue(value, user):
     if value not in ["id", "username", "password", "gender", "image", "age", "phone", "fav_color"]:
@@ -50,6 +60,7 @@ def graph():
         return redirect('/')
     c = conn.cursor()
     users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age,permissions FROM User""").fetchall()
+    friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
     try:
@@ -58,19 +69,13 @@ def graph():
         session.pop("username")
         return '', 400
     id = me[1]
-    gender = me[2]
-    color = me[5]
-    age = me[6]
     permissions = me[7]
-    print(permissions)
-#TODO convert permissions and pass to render_template
-    colorChecked = permissions//100
-    ageChecked = (permissions// 10) % 10
-    genderChecked = permissions % 10
-    #print(id, list(FRIENDS))
-    print(genderChecked)
-    print(ageChecked)
-    return render_template('demo.html', users=users, friends=list(FRIENDS), name=username, id=id, color=color, age=age, gender=gender, colorChecked=colorChecked, genderChecked=genderChecked, ageChecked=ageChecked)
+    perms = {
+        "color" : permissions//100,
+        "age"   : (permissions// 10) % 10,
+        "gender": permissions % 10
+    }
+    return render_template('graph.html', users=users, friends=list(friends), name=username, id=id, perms=perms)
 
 @app.route('/login/', methods=["POST"])
 def login():
@@ -91,32 +96,34 @@ def accountsetup():
         return redirect('/')
     if request.method == "POST":
         gender = request.form['gender']
-        favcolor = request.form['color']
+        fav_color = request.form['color']
         age = request.form['age']
         phone = request.form['phone']
         c = conn.cursor()
-        c.execute("""UPDATE User SET gender=?,phone=?,fav_color=? WHERE username=?""", (gender,phone,favcolor,session['username']))
+        c.execute("""UPDATE User SET age=?,gender=?,phone=?,fav_color=? WHERE username=?""",
+                (age,gender,phone,fav_color,session['username']))
         conn.commit()
         return redirect("/")
     return render_template("createaccount.html")
 
-@app.route('/addfriend/', methods=["GET", "POST"])
+@app.route('/addfriend/', methods=["POST"])
 def addfriend():
     if not "username" in session:
-        return redirect("/")
-    id = selectValue("id", session["username"])[0]
-    targ_id = selectValue("id", "Alice")[0]
-    FRIENDS.add((id-1, targ_id-1))
-    return redirect('/')
-    if request.method == 'POST':
-        if not "username" in session:
-           return redirect("/")
-        try:
-            targ_id = int(request.values['target'])
-        except:
-            return '', 400
-        FRIENDS.add((id, targ_id))
-    return redirect('/')
+       return redirect("/")
+    id = int(selectValue("id", session['username'])[0])
+    targ_id = int(request.values['target'])
+    if id == targ_id:
+        return "Can't friend yourself", 400
+    c = conn.cursor()
+    ids = set(c.execute("""SELECT id from User""").fetchall())
+    if (targ_id,) not in ids:
+        return 'User not found', 400
+    friends = set(c.execute("""SELECT f1, f2 from Friend""").fetchall())
+    if (id, targ_id) in friends:
+        return 'Already friends', 200
+    c.execute("""INSERT INTO Friend(f1, f2) VALUES (?, ?)""", (id, targ_id))
+    conn.commit()
+    return "Success", 200
 
 @app.route('/register/', methods=["POST"])
 def register():
@@ -126,7 +133,10 @@ def register():
    password = request.form['password']
    c = conn.cursor()
    user = selectValue("username", username)
-   if user:
+   if username == "":
+      flash("Can't have an empty username.")
+      return redirect("/")
+   if username == "Me" or user:
       flash("That username is already taken.")
       return redirect("/")
    c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""", (username, bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())))
@@ -140,15 +150,22 @@ def logout():
         session.pop("username")
     return redirect("/")
 
-@app.route('/user/<name>/')
-def user_info(name):
+@app.route('/user/<id>/')
+def user_info(id):
+    if "username" not in session:
+        return "Error", 403
+    try:
+        id = int(id)
+    except:
+        return json.dumps({}), 200
     c = conn.cursor()
-    user = selectValue("*", name.capitalize())
-    #user = c.execute("""SELECT * from User where username=? LIMIT 1""",
-                        #(name.capitalize(),)).fetchone()
+    user = c.execute("""SELECT username, fav_color, age, gender,image FROM User
+                        where id=? LIMIT 1""", (int(id),)).fetchone()
     if user is None:
-        return redirect('/')
-    return render_template("user.html", user=user)
+        return json.dumps({}), 200
+    return json.dumps({"name":user[0], "color":user[1], 
+                        "age":user[2], "gender":user[3],
+                        "image":user[4]}), 200
 
 def controlStringToInt(string):
     if string == "everyone":
