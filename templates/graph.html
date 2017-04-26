@@ -352,6 +352,10 @@ function panelUpdate(i) {
                             pimg.onclick = function() {};
                         }
                     }
+                    pimg.onmouseover = function() {highlightSettings("image")};
+                    page.onmouseover = function() {highlightSettings("age")};
+                    pcolor.onmouseover = function() {highlightSettings("color")};
+                    pgender.onmouseover = function() {highlightSettings("gender")};
                     if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
                         pbutton.style = "display:inline-block;"; 
                         pbutton.onclick = function() { friendRequest(i) };
@@ -362,6 +366,16 @@ function panelUpdate(i) {
                 };
     xhr.onerror = function() { console.log("Error in panel update XHR");};
     xhr.send(null);
+}
+
+function highlightSettings(category) {
+    alert(category);
+    d3.selectAll("circle").attr("id", function() {
+        if (id == {{ id }}) {
+            .style("stroke-width", "6");
+        }
+    }
+
 }
 
 panelUpdate("{{ id }}");
