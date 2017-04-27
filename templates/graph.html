@@ -343,14 +343,26 @@ function panelUpdate(i) {
                             pimg.onclick = function() {};
                         }
                     }
-                    pimg.onmouseover = function() {highlightSettings("image");};
-                    pimg.onmouseout = function() {unhighlightSettings("image");};
-                    page.onmouseover = function() {highlightSettings("age");};
-                    page.onmouseout = function() {unhighlightSettings("age");};
-                    pcolor.onmouseover = function() {highlightSettings("color");};
-                    pcolor.onmouseout = function() {unhighlightSettings("color");};
-                    pgender.onmouseover = function() {highlightSettings("gender");};
-                    pgender.onmouseout = function() {unhighlightSettings("gender");};
+                    if (data["name"] == "{{ name }}") {
+                        pimg.onmouseover = function() {highlightSettings("image");};
+                        pimg.onmouseout = function() {unhighlightSettings("image");};
+                        page.onmouseover = function() {highlightSettings("age");};
+                        page.onmouseout = function() {unhighlightSettings("age");};
+                        pcolor.onmouseover = function() {highlightSettings("color");};
+                        pcolor.onmouseout = function() {unhighlightSettings("color");};
+                        pgender.onmouseover = function() {highlightSettings("gender");};
+                        pgender.onmouseout = function() {unhighlightSettings("gender");};
+                    }
+                    else {
+                        pimg.onmouseover = function() {};
+                        pimg.onmouseout = function() {};
+                        page.onmouseover = function() {};
+                        page.onmouseout = function() {};
+                        pcolor.onmouseover = function() {};
+                        pcolor.onmouseout = function() {};
+                        pgender.onmouseover = function() {};
+                        pgender.onmouseout = function() {};
+                    }
                     if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
                         pbutton.style = "display:inline-block;"; 
                         pbutton.onclick = function() { friendRequest(i) };
