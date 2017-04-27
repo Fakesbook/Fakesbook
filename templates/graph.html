@@ -28,10 +28,14 @@ svg {
     margin: 0;
 }
 
+label {
+    margin: 0px;
+}
+
 </style>
 {% endblock %}
 {% block script %}
-<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="/static/d3.v3.min.js"></script>
 <script type="application/json" id="data">
 {
     "nodes": [
@@ -56,6 +60,13 @@ svg {
 
     ]
 }    
+</script>
+<script type="application/json" id="perms">
+{
+    "age": "{{ perms['age'] }}",
+    "gender": "{{ perms['gender'] }}",
+    "color": "{{ perms['color'] }}"
+}
 </script>
 <script>
 // Utility for adding event handlers
@@ -100,7 +111,7 @@ var drag = force.drag()
     .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
 
 var data = document.getElementById('data').innerHTML;
-graph = JSON.parse(data);
+var graph = JSON.parse(data);
 
 //Creates the graph data structure out of the json data
 force.nodes(graph.nodes)
@@ -124,8 +135,7 @@ var node = svg.selectAll(".node")
     .enter().append("g")
     .attr("class", "node")
     .call(drag)
-    .on('click', highlightNode)
-    .on('dblclick', connectedNodes);
+    .on('click', highlightNode);
 
 node.append("circle")
     .attr("r", nodeRadius)
@@ -193,25 +203,6 @@ graph.links.forEach(function (d) {
 //This function looks up whether a pair are neighbors
 function neighboring(a, b) {
     return linkedByIndex[a.index + "," + b.index];
-}
-function connectedNodes() {
-    if (toggle == 0) {
-        //Reduce the opacity of all but the neighboring nodes
-        d = d3.select(this).node().__data__;
-        node.style("opacity", function (o) {
-            return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
-        });
-        link.style("opacity", function (o) {
-            return d.index==o.source.index | d.index==o.target.index ? 1 : 0.1;
-        });
-        //Reduce the op
-        toggle = 1;
-    } else {
-        //Put them back to opacity=1
-        node.style("opacity", 1);
-        link.style("opacity", 1);
-        toggle = 0;
-    }
 }
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
@@ -304,10 +295,10 @@ function friendRequest(i) {
 var panel = document.getElementById("panel");
 panel.innerHTML = "<h3 id='profile_name'></h3>"
 + "<hr />"
-+ "<img id='profile_pic' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
++ "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
 + '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
 + 'action="/profile_upload/" method="post">'
-+ '<input id="profile_pic_input" name="profile_pic" type="file" />'
++ '<input id="profile_pic_input" name="profile_image" type="file" />'
 + '</form>'
 + '</img>'
 + "<hr />"
@@ -328,7 +319,7 @@ function panelUpdate(i) {
                     var pcolor = document.getElementById("profile_color");
                     var page = document.getElementById("profile_age");
                     var pgender = document.getElementById("profile_gender");
-                    var pimg = document.getElementById("profile_pic");
+                    var pimg = document.getElementById("profile_image");
                     var pbutton = document.getElementById("addfriend_button");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
@@ -352,10 +343,14 @@ function panelUpdate(i) {
                             pimg.onclick = function() {};
                         }
                     }
-                    pimg.onmouseover = function() {highlightSettings("image")};
-                    page.onmouseover = function() {highlightSettings("age")};
-                    pcolor.onmouseover = function() {highlightSettings("color")};
-                    pgender.onmouseover = function() {highlightSettings("gender")};
+                    pimg.onmouseover = function() {highlightSettings("image");};
+                    pimg.onmouseout = function() {unhighlightSettings("image");};
+                    page.onmouseover = function() {highlightSettings("age");};
+                    page.onmouseout = function() {unhighlightSettings("age");};
+                    pcolor.onmouseover = function() {highlightSettings("color");};
+                    pcolor.onmouseout = function() {unhighlightSettings("color");};
+                    pgender.onmouseover = function() {highlightSettings("gender");};
+                    pgender.onmouseout = function() {unhighlightSettings("gender");};
                     if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
                         pbutton.style = "display:inline-block;"; 
                         pbutton.onclick = function() { friendRequest(i) };
@@ -368,14 +363,69 @@ function panelUpdate(i) {
     xhr.send(null);
 }
 
-function highlightSettings(category) {
-    alert(category);
-    d3.selectAll("circle").attr("id", function() {
-        if (id == {{ id }}) {
-            .style("stroke-width", "6");
-        }
-    }
+var perms = JSON.parse(document.getElementById("perms").innerHTML);
 
+function highlightSettings(category) {
+    var e = document.getElementById("profile_" + category);
+    if (category != "image") {
+        e.style = "font-weight: bold;";
+    }
+    var perm = perms[category];
+    if (perm == "0") { // only friends
+        var myself = d3.selectAll(".node").data().filter(
+                function(o) {return o.id == "Me"})[0];
+
+        var brightgreen = "#39FF14";
+        d3.selectAll("circle").filter(
+                function(d) {
+                    return neighboring(myself, d) || neighboring(d, myself);})
+            .style("stroke", brightgreen)
+            .style("stroke-width", "6px");
+    }
+    else if (perm == "1") { // FoF
+        var myself = d3.selectAll(".node").data().filter(
+                function(o) {return o.id == "Me"})[0];
+
+        var nodes = d3.selectAll(".node").data();
+        var friends = [];
+        for (var i = 0; i < nodes.length; i++) {
+            if (neighboring(nodes[i], myself) || neighboring(myself, nodes[i])) {
+                friends.push(nodes[i]); 
+            }
+        }
+
+        var brightorange = "#FFB347";
+        d3.selectAll("circle").filter(
+            function(d) {
+                if (neighboring(myself, d) || neighboring(d, myself)) {
+                    return true;
+                }
+                for (var i = 0; i < friends.length; i++) {
+                    if (neighboring(d, friends[i]) || neighboring(friends[i], d)) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            .style("stroke", brightorange)
+            .style("stroke-width", "6px");
+    }
+    else if (perm == "2") { // Everyone
+        d3.selectAll("circle").style("stroke-width", '6px');
+        d3.selectAll("circle").style("stroke", 'red');
+    }
+    else {
+
+    }
+}
+
+function unhighlightSettings(category) {
+    var e = document.getElementById("profile_" + category);
+    if (category != "image") {
+        e.style = "";
+    }
+    d3.selectAll("circle").style("stroke-width", '2px');
+    d3.selectAll("circle").style("stroke", 'black');
 }
 
 panelUpdate("{{ id }}");
@@ -385,11 +435,15 @@ function controlChange() {
     var url = "/control_change/";
     var params = "control=";
     xhr.open("POST", url, true);
+    xhr.onload = function () {
+                    if (xhr.status == 200) {
+                        location.reload();
+                    }
+                   };
 
     var color = document.getElementById("color");
     for (c in color.children) {
         if (color[c] && color[c].checked == true) {
-            //params += "color=";
             params += color[c].value;
         }
     }
@@ -397,7 +451,6 @@ function controlChange() {
     var age = document.getElementById("age");
     for (c in age.children) {
         if (age[c] && age[c].checked) {
-            //params += ";age=";
             params += ";";
             params += age[c].value;
         }
@@ -406,7 +459,6 @@ function controlChange() {
     var gender = document.getElementById("gender");
     for (c in gender.children) {
         if (gender[c] && gender[c].checked) {
-            //params += ";gender=";
             params += ";";
             params += gender[c].value;
         }
@@ -425,61 +477,70 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<div style="float: left;">'
                     + "<h4>Favorite Color</h4>"
                     + '<form id="color">'
-                        + '<input type="radio" name="fav_color" value="friends" onclick=controlChange()' 
+                        + '<label><input type="radio" name="fav_color" value="friends"'
+                        + ' onclick=controlChange()' 
                         {% if perms["color"] == 0 %}
                             + ' checked'
                         {% endif %}
-                        + '>Only Friends<br>'
-                        + '<input type="radio" name="fav_color" value="fof" onclick=controlChange()' 
+                        + '>Friends</label><br>'
+                        + '<label><input type="radio" name="fav_color" value="fof"'
+                        + ' onclick=controlChange()' 
                         {% if perms["color"] == 1 %}
                             + ' checked'
                         {% endif %}
-                        + '>Friends of Friends<br>'
-                        + '<input type="radio" name="fav_color" value="everyone" onclick=controlChange()' 
+                        + '>Friends of Friends</label><br>'
+                        + '<label><input type="radio" name="fav_color" value="everyone"'
+                        + ' onclick=controlChange()' 
                         {% if perms["color"] == 2 %}
                             + ' checked'
                         {% endif %}
-                        + '>Everyone<br>'
+                    + '>Everyone</label>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Age</h4>"
                     + '<form id="age">'
-                        + '<input type="radio" name="age" value="friends" onclick=controlChange()'
+                        + '<label><input type="radio" name="age" value="friends"'
+                        + ' onclick=controlChange()'
                         {% if perms["age"] == 0 %}
                             + ' checked'
                         {% endif %}
-                        + '>Only Friends<br>'
-                        + '<input type="radio" name="age" value="fof" onclick=controlChange()'
+                        + '>Friends</label><br>'
+                        + '<label><input type="radio" name="age" value="fof"'
+                        + ' onclick=controlChange()'
                         {% if perms["age"] == 1 %}
                             + ' checked'
                         {% endif %}
-                        + '>Friends of Friends<br>'
-                        + '<input type="radio" name="age" value="everyone" onclick=controlChange()'
+                        + '>Friends of Friends</label><br>'
+                        + '<label><input type="radio" name="age" value="everyone"'
+                        + ' onclick=controlChange()'
                         {% if perms["age"] == 2 %}
                             + ' checked'
                         {% endif %}
-                        + '>Everyone<br>'
+                        + '>Everyone</label>'
                     + '</form>'
                     + '</div>'
                     + '<div style="float:left; margin-left: 5%;">'
                     + "<h4>Gender</h4>"
                     + '<form id="gender">'
-                        + '<input type="radio" name="gender" value="friends" onclick=controlChange()'
+                    + '<label><input type="radio" name="gender" value="friends"'
+                    + ' onclick=controlChange()'
                         {% if perms["gender"] == 0 %}
                             + ' checked'
                         {% endif %}
-                        + '>Only Friends<br>'
-                        + '<input type="radio" name="gender" value="fof" onclick=controlChange()'
+                        + '>Friends</label><br>'
+                        + '<label><input type="radio" name="gender" value="fof"'
+                        + ' onclick=controlChange()'
                         {% if perms["gender"] == 1 %}
                             + ' checked'
                         {% endif %}
-                        + '>Friends of Friends<br>'
-                        + '<input type="radio" name="gender" value="everyone" onclick=controlChange()'
+                        + '>Friends of Friends</label><br>'
+                        + '<label><input type="radio" name="gender" value="everyone"'
+                        + ' onclick=controlChange()'
                         {% if perms["gender"] == 2 %}
                             + ' checked'
                         {% endif %}
-                        + '>Everyone<br>'
+                        + '>Everyone</label>'
                     + '</form>'
                     + '</div>'
                     + '</div>'
