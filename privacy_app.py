@@ -25,9 +25,9 @@ c.execute("""
       fav_color text default null,
       permissions integer default 222
    )""")
-c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
-c.execute("""INSERT INTO User(username,image) VALUES ("Eve", "puppy.jpg")""")
-c.execute("""INSERT INTO User(username) VALUES ("Bob")""")
+#c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
+#c.execute("""INSERT INTO User(username,image) VALUES ("Eve", "puppy.jpg")""")
+#c.execute("""INSERT INTO User(username) VALUES ("Bob")""")
 c.execute("""DROP TABLE IF EXISTS Friend""")
 c.execute("""
    CREATE TABLE IF NOT EXISTS Friend (
@@ -38,7 +38,7 @@ c.execute("""
       foreign key (f2) references User(id),
       constraint friendship unique (f1, f2)
    )""")
-c.execute("""INSERT INTO Friend(f1, f2) VALUES (1, 2), (1, 3), (2, 3), (3, 1)""")
+#c.execute("""INSERT INTO Friend(f1, f2) VALUES (1, 2), (1, 3), (2, 3), (3, 1)""")
 conn.commit()
 
 UPLOAD_FOLDER = "./uploads"
