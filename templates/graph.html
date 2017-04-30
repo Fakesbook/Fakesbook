@@ -202,7 +202,7 @@ graph.links.forEach(function (d) {
 });
 //This function looks up whether a pair are neighbors
 function neighboring(a, b) {
-    return linkedByIndex[a.index + "," + b.index];
+    return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index];
 }
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements

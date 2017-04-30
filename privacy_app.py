@@ -12,7 +12,7 @@ import sqlite3
 conn = sqlite3.connect('app.db', check_same_thread=False)
 
 c = conn.cursor()
-c.execute("""DROP TABLE IF EXISTS User""")
+#c.execute("""DROP TABLE IF EXISTS User""")
 c.execute("""
    CREATE TABLE IF NOT EXISTS User (
       id integer primary key autoincrement,
@@ -28,7 +28,7 @@ c.execute("""
 #c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
 #c.execute("""INSERT INTO User(username,image) VALUES ("Eve", "puppy.jpg")""")
 #c.execute("""INSERT INTO User(username) VALUES ("Bob")""")
-c.execute("""DROP TABLE IF EXISTS Friend""")
+#c.execute("""DROP TABLE IF EXISTS Friend""")
 c.execute("""
    CREATE TABLE IF NOT EXISTS Friend (
       id integer primary key autoincrement,
@@ -48,7 +48,8 @@ app = Flask(__name__)
 app.secret_key = b64decode(environ['SECRET_KEY'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
-debug = True
+#debug = True
+debug = False
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -95,7 +96,7 @@ def login():
     username = request.form['name'].capitalize()
     password = request.form['password']
     user_pw = selectValue("password", username)
-    if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
+    if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0].encode('utf-8')):
         session['username'] = username
     else:
         flash("Incorrect username/password")
@@ -247,4 +248,4 @@ def control_change():
     return "", 200
 
 if __name__ == '__main__':
-    app.run(debug=debug, port=8080)    
+    app.run(debug=debug, port=8080, host='0.0.0.0')    
