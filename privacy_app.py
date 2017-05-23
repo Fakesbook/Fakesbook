@@ -23,6 +23,8 @@ c.execute("""
       age integer default null,
       phone text default null,
       fav_color text default null,
+      interests text default null,
+      hometown text default null,
       permissions integer default 222
    )""")
 #c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
@@ -56,7 +58,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def selectValue(value, user):
-    if value not in ["id", "username", "password", "gender", "image", "age", "phone", "fav_color"]:
+    if value not in ["id", "username", "password", "gender", "image", "age", "phone", "fav_color", "interests", "hometown"]:
         return None
     c = conn.cursor()
     return c.execute("""SELECT {v} FROM User WHERE username=? LIMIT 1""".format(v=value),
@@ -71,12 +73,13 @@ def graph():
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
-    users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age,permissions FROM User""").fetchall()
+    users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age,permissions,interests,hometown FROM User""").fetchall()
     friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
     try:
         me = list(filter(lambda u: u[0].capitalize() == username.capitalize(), users))[0]
+        #me = list(filter(lambda u: u[9].capitalize() == username.capitalize(), users))[9]
     except:
         session.pop("username")
         return '', 400
@@ -111,9 +114,11 @@ def accountsetup():
         fav_color = request.form['color']
         age = request.form['age']
         phone = request.form['phone']
+        interests = request.form['interests']
+        hometown = request.form['hometown'].capitalize()
         c = conn.cursor()
-        c.execute("""UPDATE User SET age=?,gender=?,phone=?,fav_color=? WHERE username=?""",
-                (age,gender,phone,fav_color,session['username']))
+        c.execute("""UPDATE User SET age=?,gender=?,phone=?,fav_color=?,interests=?,hometown=? WHERE username=?""",
+                (age,gender,phone,fav_color,interests,hometown,session['username']))
         conn.commit()
         return redirect("/")
     return render_template("createaccount.html")
@@ -171,13 +176,14 @@ def user_info(id):
     except:
         return json.dumps({}), 200
     c = conn.cursor()
-    user = c.execute("""SELECT username, fav_color, age, gender,image FROM User
+    user = c.execute("""SELECT username, fav_color, age, gender,image, interests, hometown FROM User
                         where id=? LIMIT 1""", (int(id),)).fetchone()
     if user is None:
         return json.dumps({}), 200
     return json.dumps({"name":user[0], "color":user[1], 
                         "age":user[2], "gender":user[3],
-                        "image":user[4]}), 200
+                        "image":user[4], "interests":user[5],
+                        "hometown":user[6]}), 200
 
 @app.route('/pic/<filename>')
 def profile_pic(filename):

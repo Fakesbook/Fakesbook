@@ -305,6 +305,8 @@ panel.innerHTML = "<h3 id='profile_name'></h3>"
 + "<h4 id='profile_color'></h4>"
 + "<h4 id='profile_age'></h4>"
 + "<h4 id='profile_gender'></h4>"
++ "<h4 id='profile_interests'></h4>"
++ "<h4 id='profile_hometown'></h4>"
 + "<hr />"
 + '<button class="btn btn-success" style="display:none;" id="addfriend_button">Add Friend</button>'
 + "</div>";
@@ -320,11 +322,15 @@ function panelUpdate(i) {
                     var page = document.getElementById("profile_age");
                     var pgender = document.getElementById("profile_gender");
                     var pimg = document.getElementById("profile_image");
+                    var pinterests = document.getElementById("profile_interests");
+                    var phometown = document.getElementById("profile_hometown");
                     var pbutton = document.getElementById("addfriend_button");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
                     page.innerText = "Age: " + data["age"];
                     pgender.innerText = "Gender: " + data["gender"];
+                    pinterests.innerText = "Interests: " + data["interests"];
+                    phometown.innerText = "Hometown: " + data["hometown"];
                     if (data["image"] == "none") {
                         pimg.src = "/static/images/none.png";
                         if (i == "{{ id }}") {
