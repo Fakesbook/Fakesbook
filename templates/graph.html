@@ -65,7 +65,9 @@ label {
 {
     "age": "{{ perms['age'] }}",
     "gender": "{{ perms['gender'] }}",
-    "color": "{{ perms['color'] }}"
+    "color": "{{ perms['color'] }}",
+    "hometown": "{{ perms['hometown'] }}",
+    "interests": "{{ perms['interests'] }}"
 }
 </script>
 <script>
@@ -358,6 +360,10 @@ function panelUpdate(i) {
                         pcolor.onmouseout = function() {unhighlightSettings("color");};
                         pgender.onmouseover = function() {highlightSettings("gender");};
                         pgender.onmouseout = function() {unhighlightSettings("gender");};
+                        pinterests.onmouseover = function() {highlightSettings("interests");};
+                        pinterests.onmouseout = function() {unhighlightSettings("interests");};
+                        phometown.onmouseover = function() {highlightSettings("hometown");};
+                        phometown.onmouseout = function() {unhighlightSettings("hometown");};
                     }
                     else {
                         pimg.onmouseover = function() {};
@@ -368,6 +374,10 @@ function panelUpdate(i) {
                         pcolor.onmouseout = function() {};
                         pgender.onmouseover = function() {};
                         pgender.onmouseout = function() {};
+                        pinterests.onmouseover = function() {};
+                        pinterests.onmouseout = function() {};
+                        phometown.onmouseover = function() {};
+                        phometown.onmouseout = function() {};
                     }
                     if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
                         pbutton.style = "display:inline-block;"; 
@@ -481,6 +491,22 @@ function controlChange() {
             params += gender[c].value;
         }
     }
+
+    var interests = document.getElementById("interests");
+    for (c in interests.children) {
+        if (interests[c] && interests[c].checked) {
+            params += ";";
+            params += interests[c].value;
+        }
+    }
+
+    var hometown = document.getElementById("hometown");
+    for (c in hometown.children) {
+        if (hometown[c] && hometown[c].checked) {
+            params += ";";
+            params += hometown[c].value;
+        }
+    }
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhr.send(params);
 }
@@ -556,6 +582,52 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label><input type="radio" name="gender" value="everyone"'
                         + ' onclick=controlChange()'
                         {% if perms["gender"] == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone</label>'
+                    + '</form>'
+                    + '</div>'
+                    + '<div style="float:left; margin-left: 5%;">'
+                    + "<h4>Interests</h4>"
+                    + '<form id="interests">'
+                    + '<label><input type="radio" name="interests" value="friends"'
+                    + ' onclick=controlChange()'
+                        {% if perms["interests"] == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends</label><br>'
+                        + '<label><input type="radio" name="interests" value="fof"'
+                        + ' onclick=controlChange()'
+                        {% if perms["interests"] == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends</label><br>'
+                        + '<label><input type="radio" name="interests" value="everyone"'
+                        + ' onclick=controlChange()'
+                        {% if perms["interests"] == 2 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Everyone</label>'
+                    + '</form>'
+                    + '</div>'
+                    + '<div style="float:left; margin-left: 5%;">'
+                    + "<h4>Hometown</h4>"
+                    + '<form id="hometown">'
+                    + '<label><input type="radio" name="hometown" value="friends"'
+                    + ' onclick=controlChange()'
+                        {% if perms["hometown"] == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends</label><br>'
+                        + '<label><input type="radio" name="hometown" value="fof"'
+                        + ' onclick=controlChange()'
+                        {% if perms["hometown"] == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends</label><br>'
+                        + '<label><input type="radio" name="hometown" value="everyone"'
+                        + ' onclick=controlChange()'
+                        {% if perms["hometown"] == 2 %}
                             + ' checked'
                         {% endif %}
                         + '>Everyone</label>'

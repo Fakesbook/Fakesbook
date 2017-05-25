@@ -25,7 +25,7 @@ c.execute("""
       fav_color text default null,
       interests text default null,
       hometown text default null,
-      permissions integer default 222
+      permissions integer default 22222
    )""")
 #c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
 #c.execute("""INSERT INTO User(username,image) VALUES ("Eve", "puppy.jpg")""")
@@ -86,10 +86,14 @@ def graph():
     id = me[1]
     permissions = me[7]
     perms = {
-        "color" : permissions//100,
-        "age"   : (permissions// 10) % 10,
-        "gender": permissions % 10
+        "color": (permissions//10000),
+        "age" : (permissions//1000) % 10,
+        "gender" : (permissions//100) % 10,
+        "interests"   : (permissions// 10) % 10,
+        "hometown": permissions % 10
     }
+    print(permissions)
+    print(perms)
     return render_template('graph.html', users=users, friends=list(friends), name=username, id=id, perms=perms)
 
 @app.route('/login/', methods=["POST"])
@@ -244,6 +248,7 @@ def control_change():
         permissions = permissions + controlStringToInt(v)
         permissions = permissions * 10
     permissions = permissions/10
+    print(permissions)
 
     user = session['username']
 
