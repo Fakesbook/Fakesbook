@@ -50,8 +50,7 @@ app = Flask(__name__)
 app.secret_key = b64decode(environ['SECRET_KEY'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
-#debug = True
-debug = False
+debug = True
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -171,6 +170,12 @@ def logout():
         session.pop("username")
     return redirect("/")
 
+def ids_are_friends(id1, id2):
+    c = conn.cursor()
+    is_friend = c.execute("""SELECT count(*) from Friend where (f1=? and f2=?)
+                             or (f1=? and f2=?)""", (my_id, id, id, my_id)).fetchone()
+    return bool(is_friend)
+
 @app.route('/user/<id>/')
 def user_info(id):
     if "username" not in session:
@@ -180,25 +185,30 @@ def user_info(id):
     except:
         return json.dumps({}), 200
     c = conn.cursor()
-    user = c.execute("""SELECT username, fav_color, age, gender,image, interests, hometown FROM User
-                        where id=? LIMIT 1""", (int(id),)).fetchone()
+    user = c.execute("""SELECT username, fav_color, age, gender,image, interests, hometown,
+                        permissions FROM User where id=? LIMIT 1""",
+                        (int(id),)).fetchone()
     if user is None:
         return json.dumps({}), 200
+    my_id = selectValue(session["username"], "id")[0]
+    is_friend = ids_are_friends(my_id, id)
+    # TODO is FoF
+    # TODO pull permissions and mask data if req'd
     return json.dumps({"name":user[0], "color":user[1], 
                         "age":user[2], "gender":user[3],
                         "image":user[4], "interests":user[5],
                         "hometown":user[6]}), 200
 
 @app.route('/pic/<filename>')
-def profile_pic(filename):
+def profile_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/profile_upload/', methods=['POST'])
 def profile_pic_upload():
-    if 'username' not in session or 'profile_pic' not in request.files:
+    if 'username' not in session or 'profile_image' not in request.files:
         return redirect('/d3/')
     user = session['username']
-    file = request.files['profile_pic']
+    file = request.files['profile_image']
     if file.filename == '':
         return redirect('/d3/')
     if file and allowed_file(file.filename):

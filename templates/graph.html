@@ -304,6 +304,7 @@ panel.innerHTML = "<h3 id='profile_name'></h3>"
 + '</form>'
 + '</img>'
 + "<hr />"
++ "<h5>Hover over to see who can see your information!</h5>"
 + "<h4 id='profile_color'></h4>"
 + "<h4 id='profile_age'></h4>"
 + "<h4 id='profile_gender'></h4>"
@@ -408,7 +409,8 @@ function highlightSettings(category) {
                 function(d) {
                     return neighboring(myself, d) || neighboring(d, myself);})
             .style("stroke", brightgreen)
-            .style("stroke-width", "6px");
+            .style("stroke-opacity", "0.75")
+            .style("stroke-width", "64px");
     }
     else if (perm == "1") { // FoF
         var myself = d3.selectAll(".node").data().filter(
@@ -436,10 +438,12 @@ function highlightSettings(category) {
                 return false;
             })
             .style("stroke", brightorange)
-            .style("stroke-width", "6px");
+            .style("stroke-opacity", "0.75")
+            .style("stroke-width", "64px");
     }
     else if (perm == "2") { // Everyone
-        d3.selectAll("circle").style("stroke-width", '6px');
+        d3.selectAll("circle").style("stroke-width", '64px');
+        d3.selectAll("circle").style("stroke-opacity", '0.75');
         d3.selectAll("circle").style("stroke", 'red');
     }
     else {
