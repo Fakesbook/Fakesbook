@@ -86,7 +86,7 @@ var addEvent = function(object, type, callback) {
 addEvent(window, "resize", function() {window.location = window.location;});
 
 //Constants for the SVG
-var width = window.innerWidth*0.8;
+var width = window.innerWidth*0.78;
 var height = window.innerHeight*0.8;
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
@@ -304,7 +304,7 @@ panel.innerHTML = "<h3 id='profile_name'></h3>"
 + '</form>'
 + '</img>'
 + "<hr />"
-+ "<h5>Hover over to see who can see your information!</h5>"
++ "<small id='panelhelp'></small>"
 + "<h4 id='profile_color'></h4>"
 + "<h4 id='profile_age'></h4>"
 + "<h4 id='profile_gender'></h4>"
@@ -328,6 +328,7 @@ function panelUpdate(i) {
                     var pinterests = document.getElementById("profile_interests");
                     var phometown = document.getElementById("profile_hometown");
                     var pbutton = document.getElementById("addfriend_button");
+                    var phelp = document.getElementById("panelhelp");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
                     page.innerText = "Age: " + data["age"];
@@ -353,6 +354,7 @@ function panelUpdate(i) {
                         }
                     }
                     if (data["name"] == "{{ name }}") {
+                        phelp.innerText = "Hover with your mouse to see who can see your data!";
                         pimg.onmouseover = function() {highlightSettings("image");};
                         pimg.onmouseout = function() {unhighlightSettings("image");};
                         page.onmouseover = function() {highlightSettings("age");};
@@ -367,6 +369,7 @@ function panelUpdate(i) {
                         phometown.onmouseout = function() {unhighlightSettings("hometown");};
                     }
                     else {
+                        phelp.innerText = "";
                         pimg.onmouseover = function() {};
                         pimg.onmouseout = function() {};
                         page.onmouseover = function() {};

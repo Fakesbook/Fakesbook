@@ -102,7 +102,8 @@ def login():
     username = request.form['name'].capitalize()
     password = request.form['password']
     user_pw = selectValue("password", username)
-    if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0].encode('utf-8')):
+    print(username, user_pw[0])
+    if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
         session['username'] = username
     else:
         flash("Incorrect username/password")
@@ -173,8 +174,8 @@ def logout():
 def ids_are_friends(id1, id2):
     c = conn.cursor()
     is_friend = c.execute("""SELECT count(*) from Friend where (f1=? and f2=?)
-                             or (f1=? and f2=?)""", (my_id, id, id, my_id)).fetchone()
-    return bool(is_friend)
+                             or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()
+    return is_friend != (0,)
 
 @app.route('/user/<id>/')
 def user_info(id):
@@ -190,14 +191,46 @@ def user_info(id):
                         (int(id),)).fetchone()
     if user is None:
         return json.dumps({}), 200
-    my_id = selectValue(session["username"], "id")[0]
+    usermap = {"name":user[0], "color":user[1], "age":user[2], "gender":user[3],
+                "image":user[4], "interests":user[5], "hometown":user[6]}
+    my_id = selectValue("id", session["username"])[0]
     is_friend = ids_are_friends(my_id, id)
-    # TODO is FoF
-    # TODO pull permissions and mask data if req'd
-    return json.dumps({"name":user[0], "color":user[1], 
-                        "age":user[2], "gender":user[3],
-                        "image":user[4], "interests":user[5],
-                        "hometown":user[6]}), 200
+    if is_friend:
+        is_fof = True
+    else:
+        is_fof = bool(c.execute("""SELECT l.f1, l.f2, r.f1, r.f2 from
+                                Friend as l, Friend as r where
+                                (l.f1=? and l.f2=r.f1 and r.f2=?) or
+                                (l.f2=? and l.f1=r.f1 and r.f2=?) or
+                                (l.f1=? and l.f2=r.f2 and r.f1=?) or
+                                (l.f2=? and l.f1=r.f2 and r.f1=?)""",
+                                (my_id, id, my_id, id, my_id, id, my_id,id)).fetchall())
+    permissions = user[7]
+    show = {}
+    # TODO do image as well
+    perms = {
+        "color": (permissions//10000),
+        "age" : (permissions//1000) % 10,
+        "gender" : (permissions//100) % 10,
+        "interests"   : (permissions// 10) % 10,
+        "hometown": permissions % 10
+    }
+    for k in perms:
+        if perms[k] == 0:
+            if is_friend:
+                show[k] = usermap[k]
+            else:
+                show[k] = "hidden"
+        elif perms[k] == 1:
+            if is_friend or is_fof:
+                show[k] = usermap[k]
+            else:
+                show[k] = "hidden"
+        elif perms[k] == 2:
+            show[k] = usermap[k]
+    show["name"] = usermap["name"]
+    show["image"] = usermap["image"]
+    return json.dumps(show), 200
 
 @app.route('/pic/<filename>')
 def profile_image(filename):
