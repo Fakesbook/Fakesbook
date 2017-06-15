@@ -25,11 +25,9 @@ c.execute("""
       fav_color text default null,
       interests text default null,
       hometown text default null,
-      permissions integer default 22222
+      permissions integer default 22222,
+      requests text default "[]"
    )""")
-#c.execute("""INSERT INTO User(username,image) VALUES ("Alice", "pupper.jpg")""")
-#c.execute("""INSERT INTO User(username,image) VALUES ("Eve", "puppy.jpg")""")
-#c.execute("""INSERT INTO User(username) VALUES ("Bob")""")
 #c.execute("""DROP TABLE IF EXISTS Friend""")
 c.execute("""
    CREATE TABLE IF NOT EXISTS Friend (
@@ -40,7 +38,6 @@ c.execute("""
       foreign key (f2) references User(id),
       constraint friendship unique (f1, f2)
    )""")
-#c.execute("""INSERT INTO Friend(f1, f2) VALUES (1, 2), (1, 3), (2, 3), (3, 1)""")
 conn.commit()
 
 UPLOAD_FOLDER = "./uploads"
@@ -57,7 +54,9 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def selectValue(value, user):
-    if value not in ["id", "username", "password", "gender", "image", "age", "phone", "fav_color", "interests", "hometown"]:
+    if value not in ["id", "username", "password", "gender", "image", 
+                     "age", "phone", "fav_color", "interests", "hometown", 
+                     "requests"]:
         return None
     c = conn.cursor()
     return c.execute("""SELECT {v} FROM User WHERE username=? LIMIT 1""".format(v=value),
@@ -164,7 +163,13 @@ def addfriend():
     friends = set(c.execute("""SELECT f1, f2 from Friend""").fetchall())
     if (id, targ_id) in friends:
         return 'Already friends', 200
-    c.execute("""INSERT INTO Friend(f1, f2) VALUES (?, ?)""", (id, targ_id))
+    requests = json.loads(selectValue("requests", session["username"])[0])
+    if targ_id in requests:
+        c.execute("""INSERT INTO Friend(f1, f2) VALUES (?, ?)""", (id, targ_id))
+    else:
+        requests.append(id)
+        c.execute("""UPDATE User set requests=? where id=?""", 
+                 (json.dumps(requests), targ_id))
     conn.commit()
     return "Success", 200
 
