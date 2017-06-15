@@ -12,7 +12,6 @@ import sqlite3
 conn = sqlite3.connect('app.db', check_same_thread=False)
 
 c = conn.cursor()
-#c.execute("""DROP TABLE IF EXISTS User""")
 c.execute("""
    CREATE TABLE IF NOT EXISTS User (
       id integer primary key autoincrement,
@@ -28,7 +27,6 @@ c.execute("""
       permissions integer default 22222,
       requests text default "[]"
    )""")
-#c.execute("""DROP TABLE IF EXISTS Friend""")
 c.execute("""
    CREATE TABLE IF NOT EXISTS Friend (
       id integer primary key autoincrement,
@@ -71,13 +69,14 @@ def graph():
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
-    users = c.execute("""SELECT username,id,gender,image,phone,fav_color,age,permissions,interests,hometown FROM User""").fetchall()
+    users = c.execute("""SELECT username,id,gender,image,phone,
+                                fav_color,age,permissions,interests,hometown
+                                FROM User""").fetchall()
     friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
     try:
         me = list(filter(lambda u: u[0].capitalize() == username.capitalize(), users))[0]
-        #me = list(filter(lambda u: u[9].capitalize() == username.capitalize(), users))[9]
     except:
         session.pop("username")
         return '', 400
@@ -104,16 +103,30 @@ def login():
     username = request.form['name'].capitalize()
     password = request.form['password']
     user_pw = selectValue("password", username)
-    if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
-        session['username'] = username
+    if user_pw:
+        if bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
+            session['username'] = username
+        else:
+            flash("Account exists! Incorrect password.")
     else:
-        flash("Incorrect username/password")
+        if username == "":
+            flash("Can't have an empty username.")
+        elif password == "":
+            flash("Can't have an empty password.")
+        else:
+            c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""",
+                        (username, bcrypt.hashpw(password.encode('utf-8'),
+                          bcrypt.gensalt())))
+            conn.commit()
+            session['username'] = username
+            return redirect("/accountsetup/")
     return redirect('/')
 
 @app.route('/editaccount/', methods=["GET", "POST"])
 def editaccount():
     if not "username" in session:
         return redirect('/')
+    c = conn.cursor()
     if request.method == "POST":
         gender = request.form['gender']
         fav_color = request.form['color']
@@ -121,16 +134,25 @@ def editaccount():
         phone = request.form['phone']
         interests = request.form['interests']
         hometown = request.form['hometown'].capitalize()
-        c = conn.cursor()
-        c.execute("""UPDATE User SET age=?,gender=?,phone=?,fav_color=?,interests=?,hometown=? WHERE username=?""",
-                (age,gender,phone,fav_color,interests,hometown,session['username']))
+        c.execute("""UPDATE User SET age=?,gender=?,phone=?,fav_color=?,
+                                     interests=?,hometown=?
+                                     WHERE username=?""",
+                                    (age,gender,phone,fav_color,
+                                     interests,hometown,session['username']))
         conn.commit()
         return redirect("/d3/") 
-    c = conn.cursor()
     user = c.execute("""SELECT fav_color, age, gender, interests, hometown, phone
                         FROM User where username=? LIMIT 1""",
                         (session["username"],)).fetchone()
-    return render_template("createaccount.html", target='/editaccount/', gender=user[2], color=user[0], age=user[1], phone=user[5], interests=user[3], hometown=user[4])
+    userdata = {
+            "color":user[0],
+            "age":user[1],
+            "gender":user[2],
+            "interests":user[3],
+            "hometown":user[4],
+            "phone":user[5]
+    }
+    return render_template("createaccount.html", target='/editaccount/',**userdata)
 
 @app.route('/accountsetup/', methods=["GET", "POST"])
 def accountsetup():
@@ -144,11 +166,15 @@ def accountsetup():
         interests = request.form['interests']
         hometown = request.form['hometown'].capitalize()
         c = conn.cursor()
-        c.execute("""UPDATE User SET age=?,gender=?,phone=?,fav_color=?,interests=?,hometown=? WHERE username=?""",
-                (age,gender,phone,fav_color,interests,hometown,session['username']))
+        c.execute("""UPDATE User SET age=?,gender=?,phone=?,
+                                     fav_color=?,interests=?,hometown=?
+                                     WHERE username=?""",
+                                    (age,gender,phone,fav_color,interests,
+                                     hometown,session['username']))
         conn.commit()
         return redirect("/")
-    return render_template("createaccount.html", target='/accountsetup/', gender="", color="", age="", phone="", interests="", hometown="")
+    return render_template("createaccount.html", target='/accountsetup/',
+            gender="", color="", age="", phone="", interests="", hometown="")
 
 @app.route('/addfriend/', methods=["POST"])
 def addfriend():
@@ -165,34 +191,15 @@ def addfriend():
     friends = set(c.execute("""SELECT f1, f2 from Friend""").fetchall())
     if (id, targ_id) in friends:
         return 'Already friends', 200
-    requests = json.loads(selectValue("requests", session["username"])[0])
+    requests = set(json.loads(selectValue("requests", session["username"])[0]))
     if targ_id in requests:
         c.execute("""INSERT INTO Friend(f1, f2) VALUES (?, ?)""", (id, targ_id))
     else:
-        requests.append(id)
+        requests.add(id)
         c.execute("""UPDATE User set requests=? where id=?""", 
-                 (json.dumps(requests), targ_id))
+                 (json.dumps(list(requests)), targ_id))
     conn.commit()
     return "Success", 200
-
-@app.route('/register/', methods=["POST"])
-def register():
-   if "username" in session:
-      return redirect('/')
-   username = request.form['name'].capitalize()
-   password = request.form['password']
-   c = conn.cursor()
-   user = selectValue("username", username)
-   if username == "":
-      flash("Can't have an empty username.")
-      return redirect("/")
-   if username == "Me" or user:
-      flash("That username is already taken.")
-      return redirect("/")
-   c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""", (username, bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())))
-   conn.commit()
-   session['username'] = username
-   return redirect("/accountsetup/")
 
 @app.route('/logout/')
 def logout():
@@ -205,8 +212,8 @@ def logout():
 def ids_are_friends(id1, id2):
     c = conn.cursor()
     is_friend = c.execute("""SELECT count(*) from Friend where (f1=? and f2=?)
-                             or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()
-    return is_friend != (0,)
+                             or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()[0]
+    return is_friend > 0
 
 @app.route('/user/<id>/')
 def user_info(id):
@@ -218,7 +225,7 @@ def user_info(id):
         return json.dumps({}), 200
     c = conn.cursor()
     user = c.execute("""SELECT username, fav_color, age, gender,image, interests, hometown,
-                        permissions FROM User where id=? LIMIT 1""",
+                        permissions,requests FROM User where id=? LIMIT 1""",
                         (int(id),)).fetchone()
     if user is None:
         return json.dumps({}), 200
@@ -263,6 +270,11 @@ def user_info(id):
                 show[k] = usermap[k]
         show["name"] = usermap["name"]
         show["image"] = usermap["image"]
+    requested = set(json.loads(user[8]))
+    if my_id in requested:
+        show["requested"] = 1
+    else:
+        show["requested"] = 0
     return json.dumps(show), 200
 
 @app.route('/pic/<filename>')

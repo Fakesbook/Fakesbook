@@ -194,13 +194,14 @@ function highlightNode() {
     panelUpdate(d.group);
     clicked=d.id;
 }
-//Create an array logging what is connected to what
+//Create a dict logging what is connected to what
 var linkedByIndex = {};
 for (i = 0; i < graph.nodes.length; i++) {
     linkedByIndex[i + "," + i] = 1;
 };
 graph.links.forEach(function (d) {
     linkedByIndex[d.source.index + "," + d.target.index] = 1;
+    linkedByIndex[d.target.index + "," + d.source.index] = 1;
 });
 //This function looks up whether a pair are neighbors
 function neighboring(a, b) {
@@ -391,12 +392,14 @@ function panelUpdate(i) {
                         phometown.onmouseover = function() {};
                         phometown.onmouseout = function() {};
                     }
-                    if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
+                    if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1
+                                        && data["requested"] != 1) {
                         pbutton.style = "display:inline-block;"; 
                         pbutton.onclick = function() { friendRequest(i) };
                         //paccept.style = "display:none;";
                     }
                     else {
+                        pbutton.onclick = function() {};
                         pbutton.style = "display:none;"; 
                         //paccept.style = "display:inline-block;";
                     }
@@ -532,7 +535,7 @@ function highlightSettingsBottom(perm, category) {
     }
 }
 
-function unhighlightSettingsBottom(perm, category) {
+function unhighlightSettingsBottom() {
     d3.selectAll("circle").style("stroke-width", '2px');
     d3.selectAll("circle").style("stroke", 'black');
 }
@@ -605,7 +608,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_color_0"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(0,"color")'
-                        + ' onmouseout=unhighlightSettingsBottom(0,"color")'
+                        + ' onmouseout=unhighlightSettingsBottom()'
                         + '><input type="radio"'
                         + ' name="fav_color" value="friends"'
                         {% if perms["color"] == 0 %}
@@ -615,7 +618,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_color_1"'
                         + ' onclick=controlChange()' 
                         + ' onmouseover=highlightSettingsBottom(1,"color")'
-                        + ' onmouseout=unhighlightSettingsBottom(1,"color")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="fav_color" value="fof"'
                         {% if perms["color"] == 1 %}
                             + ' checked'
@@ -624,7 +627,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_color_2"'
                         + ' onclick=controlChange()' 
                         + ' onmouseover=highlightSettingsBottom(2,"color")'
-                        + ' onmouseout=unhighlightSettingsBottom(2,"color")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="fav_color" value="everyone"'
                         {% if perms["color"] == 2 %}
                             + ' checked'
@@ -638,7 +641,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_age_0"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(0,"age")'
-                        + ' onmouseout=unhighlightSettingsBottom(0,"age")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="age" value="friends"'
                         {% if perms["age"] == 0 %}
                             + ' checked'
@@ -647,7 +650,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_age_1"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(1,"age")'
-                        + ' onmouseout=unhighlightSettingsBottom(1,"age")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="age" value="fof"'
                         {% if perms["age"] == 1 %}
                             + ' checked'
@@ -656,7 +659,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_age_2"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(2,"age")'
-                        + ' onmouseout=unhighlightSettingsBottom(2,"age")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="age" value="everyone"'
                         {% if perms["age"] == 2 %}
                             + ' checked'
@@ -670,7 +673,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<label id="bottom_gender_0"'
                     + ' onclick=controlChange()'
                     + ' onmouseover=highlightSettingsBottom(0,"gender")'
-                    + ' onmouseout=unhighlightSettingsBottom(0,"gender")' 
+                    + ' onmouseout=unhighlightSettingsBottom()' 
                     + '><input type="radio" name="gender" value="friends"'
                         {% if perms["gender"] == 0 %}
                             + ' checked'
@@ -679,7 +682,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_gender_1"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(1,"gender")'
-                        + ' onmouseout=unhighlightSettingsBottom(1,"gender")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="gender" value="fof"'
                         {% if perms["gender"] == 1 %}
                             + ' checked'
@@ -688,7 +691,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_gender_2"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(2,"gender")'
-                        + ' onmouseout=unhighlightSettingsBottom(2,"gender")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="gender" value="everyone"'
                         {% if perms["gender"] == 2 %}
                             + ' checked'
@@ -702,7 +705,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<label id="bottom_interests_0"'
                     + ' onclick=controlChange()'
                     + ' onmouseover=highlightSettingsBottom(0,"interests")'
-                    + ' onmouseout=unhighlightSettingsBottom(0,"interests")' 
+                    + ' onmouseout=unhighlightSettingsBottom()' 
                     + '><input type="radio" name="interests" value="friends"'
                         {% if perms["interests"] == 0 %}
                             + ' checked'
@@ -711,7 +714,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_interests_1"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(1,"interests")'
-                        + ' onmouseout=unhighlightSettingsBottom(1,"interests")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="interests" value="fof"'
                         {% if perms["interests"] == 1 %}
                             + ' checked'
@@ -720,7 +723,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_interests_2"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(2,"interests")'
-                        + ' onmouseout=unhighlightSettingsBottom(2,"interests")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="interests" value="everyone"'
                         {% if perms["interests"] == 2 %}
                             + ' checked'
@@ -734,7 +737,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<label id="bottom_hometown_0"'
                     + ' onclick=controlChange()'
                     + ' onmouseover=highlightSettingsBottom(0,"hometown")'
-                    + ' onmouseout=unhighlightSettingsBottom(0,"hometown")' 
+                    + ' onmouseout=unhighlightSettingsBottom()' 
                     + '><input type="radio" name="hometown" value="friends"'
                         {% if perms["hometown"] == 0 %}
                             + ' checked'
@@ -743,7 +746,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_hometown_1"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(1,"hometown")'
-                        + ' onmouseout=unhighlightSettingsBottom(1,"hometown")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="hometown" value="fof"'
                         {% if perms["hometown"] == 1 %}
                             + ' checked'
@@ -752,7 +755,7 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                         + '<label id="bottom_hometown_2"'
                         + ' onclick=controlChange()'
                         + ' onmouseover=highlightSettingsBottom(2,"hometown")'
-                        + ' onmouseout=unhighlightSettingsBottom(2,"hometown")' 
+                        + ' onmouseout=unhighlightSettingsBottom()' 
                         + '><input type="radio" name="hometown" value="everyone"'
                         {% if perms["hometown"] == 2 %}
                             + ' checked'

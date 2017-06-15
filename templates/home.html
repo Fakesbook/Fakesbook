@@ -29,8 +29,6 @@
           <br /><br />
           <label for="submit"><h3></h3></label>
           <input id="loginSubmit" type="submit" class="btn btn-primary" value="Log in">
-          <label for="register"></label>
-          <input onclick="register()" type="button" class="btn btn-info" id="registerSubmit" type="submit" value="Register">
       </form> 
     </div>
   </div>
@@ -46,11 +44,6 @@
 <script>
 function refresh() {
     this.reload(false);
-}
-function register() {
-    var e = document.getElementById("form");
-    e.action = "/register/";
-    e.submit();
 }
 </script>
 {% if not authed %}
