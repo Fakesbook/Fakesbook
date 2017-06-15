@@ -90,9 +90,6 @@ def graph():
         "interests"   : (permissions// 10) % 10,
         "hometown": permissions % 10
     }
-    return render_template('graph.html', users=users, friends=list(friends), name=username, id=id, perms=perms)
-    print(permissions)
-    print(perms)
     if "viewing" in session:
         viewing = session["viewing"]
     else:
@@ -229,11 +226,9 @@ def user_info(id):
                 "image":user[4], "interests":user[5], "hometown":user[6]}
     session["viewing"] = id
     my_id = selectValue("id", session["username"])[0]
-    is_friend = ids_are_friends(my_id, id)
-    if is_friend:
-        is_fof = True
-    else:
-        is_fof = bool(c.execute("""SELECT l.f1, l.f2, r.f1, r.f2 from
+    is_me = my_id == id
+    is_friend = is_me or ids_are_friends(my_id, id)
+    is_fof = is_friend or bool(c.execute("""SELECT l.f1, l.f2, r.f1, r.f2 from
                                 Friend as l, Friend as r where
                                 (l.f1=? and l.f2=r.f1 and r.f2=?) or
                                 (l.f2=? and l.f1=r.f1 and r.f2=?) or
@@ -250,21 +245,24 @@ def user_info(id):
         "interests"   : (permissions// 10) % 10,
         "hometown": permissions % 10
     }
-    for k in perms:
-        if perms[k] == 0:
-            if is_friend:
+    if is_me:
+        show = usermap
+    else:
+        for k in perms:
+            if perms[k] == 0:
+                if is_friend:
+                    show[k] = usermap[k]
+                else:
+                    show[k] = "hidden"
+            elif perms[k] == 1:
+                if is_friend or is_fof:
+                    show[k] = usermap[k]
+                else:
+                    show[k] = "hidden"
+            elif perms[k] == 2:
                 show[k] = usermap[k]
-            else:
-                show[k] = "hidden"
-        elif perms[k] == 1:
-            if is_friend or is_fof:
-                show[k] = usermap[k]
-            else:
-                show[k] = "hidden"
-        elif perms[k] == 2:
-            show[k] = usermap[k]
-    show["name"] = usermap["name"]
-    show["image"] = usermap["image"]
+        show["name"] = usermap["name"]
+        show["image"] = usermap["image"]
     return json.dumps(show), 200
 
 @app.route('/pic/<filename>')

@@ -295,8 +295,7 @@ function friendRequest(i) {
 }
 
 var panel = document.getElementById("panel");
-panel.innerHTML = '<a href="/editaccount/" class="btn btn-success" id="edit_profile_button">Edit</a>'
-+ "<h3 id='profile_name'></h3>"
+panel.innerHTML = "<h3 id='profile_name'></h3>"
 + "<hr />"
 + "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
 + '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
@@ -311,11 +310,14 @@ panel.innerHTML = '<a href="/editaccount/" class="btn btn-success" id="edit_prof
 + "<h4 id='profile_gender'></h4>"
 + "<h4 id='profile_interests'></h4>"
 + "<h4 id='profile_hometown'></h4>"
-+ "<hr />"
++ '<a href="/editaccount/" class="btn btn-small btn-success" id="edit_profile_button">Edit</a>'
 + '<button class="btn btn-success" style="display:none;" id="addfriend_button">Add Friend</button>'
+/*
++ "<hr />"
 + '<form id="accept_request"> Accept Friend Request</br>'
     + '<label><input type="radio" name="test" value="test"'
     + ' onclick=accept_request()>Test</label><br>'
+*/
 + "</div>";
 
 function panelUpdate(i) {
@@ -333,7 +335,7 @@ function panelUpdate(i) {
                     var phometown = document.getElementById("profile_hometown");
                     var pbutton = document.getElementById("addfriend_button");
                     var pedit = document.getElementById("edit_profile_button");
-                    var paccept = document.getElementById("accept_request");
+                    //var paccept = document.getElementById("accept_request");
                     var phelp = document.getElementById("panelhelp");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
@@ -392,13 +394,17 @@ function panelUpdate(i) {
                     if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
                         pbutton.style = "display:inline-block;"; 
                         pbutton.onclick = function() { friendRequest(i) };
-                        paccept.style = "display:none;";
-                        pedit.style = "display:none;";
+                        //paccept.style = "display:none;";
                     }
                     else {
                         pbutton.style = "display:none;"; 
-                        paccept.style = "display:inline-block;";
+                        //paccept.style = "display:inline-block;";
+                    }
+                    if (i == "{{ id }}") {
                         pedit.style = "display:inline-block;";
+                    }
+                    else {
+                        pedit.style = "display:none;";
                     }
                 };
     xhr.onerror = function() { console.log("Error in panel update XHR");};
@@ -531,7 +537,7 @@ function unhighlightSettingsBottom(perm, category) {
     d3.selectAll("circle").style("stroke", 'black');
 }
 
-panelUpdate("{{ viewing }}");
+panelUpdate({{ viewing }});
 
 function controlChange() {
     var xhr = new XMLHttpRequest();
