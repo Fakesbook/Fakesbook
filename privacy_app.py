@@ -191,13 +191,16 @@ def addfriend():
     friends = set(c.execute("""SELECT f1, f2 from Friend""").fetchall())
     if (id, targ_id) in friends:
         return 'Already friends', 200
-    requests = set(json.loads(selectValue("requests", session["username"])[0]))
-    if targ_id in requests:
+    my_requests = set(json.loads(selectValue("requests", session["username"])[0]))
+    targ_requests = set(json.loads(c.execute("""SELECT requests
+                                                FROM User WHERE id=?""",
+                                                (targ_id,)).fetchone()[0]))
+    if targ_id in my_requests:
         c.execute("""INSERT INTO Friend(f1, f2) VALUES (?, ?)""", (id, targ_id))
     else:
-        requests.add(id)
+        targ_requests.add(id)
         c.execute("""UPDATE User set requests=? where id=?""", 
-                 (json.dumps(list(requests)), targ_id))
+                 (json.dumps(list(targ_requests)), targ_id))
     conn.commit()
     return "Success", 200
 
@@ -271,10 +274,15 @@ def user_info(id):
         show["name"] = usermap["name"]
         show["image"] = usermap["image"]
     requested = set(json.loads(user[8]))
+    my_requested = set(json.loads(c.execute("""SELECT requests FROM User
+                                               WHERE id=?""",
+                                               (my_id,)).fetchone()[0]))
     if my_id in requested:
-        show["requested"] = 1
+        show["requested"] = 2 # I requested targ
+    elif id in my_requested:
+        show["requested"] = 1 # targ requested me
     else:
-        show["requested"] = 0
+        show["requested"] = 0 # neither or both
     return json.dumps(show), 200
 
 @app.route('/pic/<filename>')

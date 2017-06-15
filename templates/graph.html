@@ -313,12 +313,6 @@ panel.innerHTML = "<h3 id='profile_name'></h3>"
 + "<h4 id='profile_hometown'></h4>"
 + '<a href="/editaccount/" class="btn btn-small btn-success" id="edit_profile_button">Edit</a>'
 + '<button class="btn btn-success" style="display:none;" id="addfriend_button">Add Friend</button>'
-/*
-+ "<hr />"
-+ '<form id="accept_request"> Accept Friend Request</br>'
-    + '<label><input type="radio" name="test" value="test"'
-    + ' onclick=accept_request()>Test</label><br>'
-*/
 + "</div>";
 
 function panelUpdate(i) {
@@ -336,7 +330,6 @@ function panelUpdate(i) {
                     var phometown = document.getElementById("profile_hometown");
                     var pbutton = document.getElementById("addfriend_button");
                     var pedit = document.getElementById("edit_profile_button");
-                    //var paccept = document.getElementById("accept_request");
                     var phelp = document.getElementById("panelhelp");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
@@ -392,22 +385,40 @@ function panelUpdate(i) {
                         phometown.onmouseover = function() {};
                         phometown.onmouseout = function() {};
                     }
-                    if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1
-                                        && data["requested"] != 1) {
-                        pbutton.style = "display:inline-block;"; 
-                        pbutton.onclick = function() { friendRequest(i) };
-                        //paccept.style = "display:none;";
-                    }
-                    else {
-                        pbutton.onclick = function() {};
-                        pbutton.style = "display:none;"; 
-                        //paccept.style = "display:inline-block;";
-                    }
-                    if (i == "{{ id }}") {
-                        pedit.style = "display:inline-block;";
-                    }
-                    else {
+                    if (i != "{{ id }}") {
                         pedit.style = "display:none;";
+                        if (linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
+                            if (data["requested"] == 2) {
+                                pbutton.onclick = function () {};
+                                pbutton.style = "display:inline-block;"
+                                pbutton.className = "btn btn-info";
+                                pbutton.disabled = "disabled";
+                                pbutton.innerText = "Friend Request Pending...";
+                            }
+                            else if (data["requested"] == 1) {
+                                pbutton.onclick = function () {};
+                                pbutton.style = "display:inline-block;"
+                                pbutton.className = "btn btn-success";
+                                pbutton.innerText = "Accept Friend Request";
+                                pbutton.removeAttribute("disabled");
+                                pbutton.onclick = function() { friendRequest(i) };
+                            }
+                            else {
+                                pbutton.style = "display:inline-block;"; 
+                                pbutton.className = "btn btn-info";
+                                pbutton.innerText = "Add Friend";
+                                pbutton.removeAttribute("disabled");
+                                pbutton.onclick = function() { friendRequest(i) };
+                            }
+                        }
+                        else {
+                            pbutton.onclick = function() {};
+                            pbutton.style = "display:none;"; 
+                        }
+                    }
+                    else {
+                        pedit.style = "display:inline-block;";
+                        pbutton.style = "display:none;"
                     }
                 };
     xhr.onerror = function() { console.log("Error in panel update XHR");};
