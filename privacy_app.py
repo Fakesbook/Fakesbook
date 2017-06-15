@@ -107,6 +107,30 @@ def login():
         flash("Incorrect username/password")
     return redirect('/')
 
+@app.route('/editaccount/', methods=["GET", "POST"])
+def editaccount():
+    print("edit")
+    if not "username" in session:
+        return redirect('/')
+    if request.method == "POST":
+        print("edit_post")
+        gender = request.form['gender']
+        fav_color = request.form['color']
+        age = request.form['age']
+        phone = request.form['phone']
+        interests = request.form['interests']
+        hometown = request.form['hometown'].capitalize()
+        c = conn.cursor()
+        c.execute("""UPDATE User SET age=?,gender=?,phone=?,fav_color=?,interests=?,hometown=? WHERE username=?""",
+                (age,gender,phone,fav_color,interests,hometown,session['username']))
+        conn.commit()
+        return redirect("/d3/") 
+    c = conn.cursor()
+    user = c.execute("""SELECT fav_color, age, gender, interests, hometown, phone
+                        FROM User where username=? LIMIT 1""",
+                        (session["username"],)).fetchone()
+    return render_template("createaccount.html", target='/editaccount/', gender=user[2], color=user[0], age=user[1], phone=user[5], interests=user[3], hometown=user[4])
+
 @app.route('/accountsetup/', methods=["GET", "POST"])
 def accountsetup():
     if not "username" in session:
@@ -123,7 +147,7 @@ def accountsetup():
                 (age,gender,phone,fav_color,interests,hometown,session['username']))
         conn.commit()
         return redirect("/")
-    return render_template("createaccount.html")
+    return render_template("createaccount.html", target='/accountsetup/', gender="", color="", age="", phone="", interests="", hometown="")
 
 @app.route('/addfriend/', methods=["POST"])
 def addfriend():

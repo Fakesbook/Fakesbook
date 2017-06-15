@@ -5,30 +5,30 @@
 {% block body %}
   <div class="container container-fluid" id="myModal" class="modal">
     <div class="modal-content">
-      <form id="form" method="post" action="/accountsetup/">
+      <form id="form" method="post" action={{ target }}>
           <label for="gender"><h3>Gender</h3></label>
           <br />
-          <input type="text" name="gender">
+          <input type="text" name="gender" value={{ gender }}>
           <br />
           <label for="age"><h3>Age</h3></label>
           <br />
-          <input type="number" name="age">
+          <input type="number" name="age" value={{ age }}>
           <br />
           <label for="phone"><h3>Phone Number</h3></label>
           <br />
-          <input type="tel" name="phone">
+          <input type="tel" name="phone" value={{ phone }}>
           <br />
           <label for="color"><h3>Favorite Color</h3></label>
           <br />
-          <input type="text" name="color">
+          <input type="text" name="color" value={{ color }}>
           <br />
           <label for="interests"><h3>Interests</h3></label>
           <br />
-          <input type="text" name="interests">
+          <input type="text" name="interests" value={{ interests }}>
           <br />
           <label for="hometown"><h3>Hometown</h3></label>
           <br />
-          <input type="text" name="hometown">
+          <input type="text" name="hometown" value={{ hometown }}>
           <br />
           <label for="submit"><h3></h3></label>
           <br />
