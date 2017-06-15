@@ -86,7 +86,7 @@ var addEvent = function(object, type, callback) {
 addEvent(window, "resize", function() {window.location = window.location;});
 
 //Constants for the SVG
-var width = window.innerWidth*0.8;
+var width = window.innerWidth*0.78;
 var height = window.innerHeight*0.8;
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
@@ -305,6 +305,7 @@ panel.innerHTML = '<button class="btn btn-success" id="edit_profile_button">Edit
 + '</form>'
 + '</img>'
 + "<hr />"
++ "<small id='panelhelp'></small>"
 + "<h4 id='profile_color'></h4>"
 + "<h4 id='profile_age'></h4>"
 + "<h4 id='profile_gender'></h4>"
@@ -333,6 +334,7 @@ function panelUpdate(i) {
                     var pbutton = document.getElementById("addfriend_button");
                     var pedit = document.getElementById("edit_profile_button");
                     var paccept = document.getElementById("accept_request");
+                    var phelp = document.getElementById("panelhelp");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
                     page.innerText = "Age: " + data["age"];
@@ -358,6 +360,7 @@ function panelUpdate(i) {
                         }
                     }
                     if (data["name"] == "{{ name }}") {
+                        phelp.innerText = "Hover with your mouse to see who can see your data!";
                         pimg.onmouseover = function() {highlightSettings("image");};
                         pimg.onmouseout = function() {unhighlightSettings("image");};
                         page.onmouseover = function() {highlightSettings("age");};
@@ -372,6 +375,7 @@ function panelUpdate(i) {
                         phometown.onmouseout = function() {unhighlightSettings("hometown");};
                     }
                     else {
+                        phelp.innerText = "";
                         pimg.onmouseover = function() {};
                         pimg.onmouseout = function() {};
                         page.onmouseover = function() {};
@@ -418,7 +422,8 @@ function highlightSettings(category) {
                 function(d) {
                     return neighboring(myself, d) || neighboring(d, myself);})
             .style("stroke", brightgreen)
-            .style("stroke-width", "6px");
+            .style("stroke-opacity", "0.75")
+            .style("stroke-width", "64px");
     }
     else if (perm == "1") { // FoF
         var myself = d3.selectAll(".node").data().filter(
@@ -446,10 +451,12 @@ function highlightSettings(category) {
                 return false;
             })
             .style("stroke", brightorange)
-            .style("stroke-width", "6px");
+            .style("stroke-opacity", "0.75")
+            .style("stroke-width", "64px");
     }
     else if (perm == "2") { // Everyone
-        d3.selectAll("circle").style("stroke-width", '6px');
+        d3.selectAll("circle").style("stroke-width", '64px');
+        d3.selectAll("circle").style("stroke-opacity", '0.75');
         d3.selectAll("circle").style("stroke", 'red');
     }
     else {

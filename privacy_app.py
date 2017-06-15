@@ -50,8 +50,7 @@ app = Flask(__name__)
 app.secret_key = b64decode(environ['SECRET_KEY'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
-#debug = True
-debug = False
+debug = True
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -101,7 +100,8 @@ def login():
     username = request.form['name'].capitalize()
     password = request.form['password']
     user_pw = selectValue("password", username)
-    if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0].encode('utf-8')):
+    print(username, user_pw[0])
+    if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
         session['username'] = username
     else:
         flash("Incorrect username/password")
@@ -169,6 +169,12 @@ def logout():
         session.pop("username")
     return redirect("/")
 
+def ids_are_friends(id1, id2):
+    c = conn.cursor()
+    is_friend = c.execute("""SELECT count(*) from Friend where (f1=? and f2=?)
+                             or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()
+    return is_friend != (0,)
+
 @app.route('/user/<id>/')
 def user_info(id):
     if "username" not in session:
@@ -178,25 +184,62 @@ def user_info(id):
     except:
         return json.dumps({}), 200
     c = conn.cursor()
-    user = c.execute("""SELECT username, fav_color, age, gender,image, interests, hometown FROM User
-                        where id=? LIMIT 1""", (int(id),)).fetchone()
+    user = c.execute("""SELECT username, fav_color, age, gender,image, interests, hometown,
+                        permissions FROM User where id=? LIMIT 1""",
+                        (int(id),)).fetchone()
     if user is None:
         return json.dumps({}), 200
-    return json.dumps({"name":user[0], "color":user[1], 
-                        "age":user[2], "gender":user[3],
-                        "image":user[4], "interests":user[5],
-                        "hometown":user[6]}), 200
+    usermap = {"name":user[0], "color":user[1], "age":user[2], "gender":user[3],
+                "image":user[4], "interests":user[5], "hometown":user[6]}
+    my_id = selectValue("id", session["username"])[0]
+    is_friend = ids_are_friends(my_id, id)
+    if is_friend:
+        is_fof = True
+    else:
+        is_fof = bool(c.execute("""SELECT l.f1, l.f2, r.f1, r.f2 from
+                                Friend as l, Friend as r where
+                                (l.f1=? and l.f2=r.f1 and r.f2=?) or
+                                (l.f2=? and l.f1=r.f1 and r.f2=?) or
+                                (l.f1=? and l.f2=r.f2 and r.f1=?) or
+                                (l.f2=? and l.f1=r.f2 and r.f1=?)""",
+                                (my_id, id, my_id, id, my_id, id, my_id,id)).fetchall())
+    permissions = user[7]
+    show = {}
+    # TODO do image as well
+    perms = {
+        "color": (permissions//10000),
+        "age" : (permissions//1000) % 10,
+        "gender" : (permissions//100) % 10,
+        "interests"   : (permissions// 10) % 10,
+        "hometown": permissions % 10
+    }
+    for k in perms:
+        if perms[k] == 0:
+            if is_friend:
+                show[k] = usermap[k]
+            else:
+                show[k] = "hidden"
+        elif perms[k] == 1:
+            if is_friend or is_fof:
+                show[k] = usermap[k]
+            else:
+                show[k] = "hidden"
+        elif perms[k] == 2:
+            show[k] = usermap[k]
+    show["name"] = usermap["name"]
+    show["image"] = usermap["image"]
+    return json.dumps(show), 200
 
 @app.route('/pic/<filename>')
-def profile_pic(filename):
+def profile_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/profile_upload/', methods=['POST'])
 def profile_pic_upload():
-    if 'username' not in session or 'profile_pic' not in request.files:
+    if 'username' not in session or 'profile_image' not in request.files:
         return redirect('/d3/')
     user = session['username']
-    file = request.files['profile_pic']
+    file = request.files['profile_image']
     if file.filename == '':
         return redirect('/d3/')
     if file and allowed_file(file.filename):
