@@ -91,6 +91,14 @@ def graph():
         "hometown": permissions % 10
     }
     return render_template('graph.html', users=users, friends=list(friends), name=username, id=id, perms=perms)
+    print(permissions)
+    print(perms)
+    if "viewing" in session:
+        viewing = session["viewing"]
+    else:
+        viewing = id
+    return render_template('graph.html', users=users, friends=list(friends),
+                            name=username, id=id, viewing=viewing, perms=perms)
 
 @app.route('/login/', methods=["POST"])
 def login():
@@ -99,7 +107,6 @@ def login():
     username = request.form['name'].capitalize()
     password = request.form['password']
     user_pw = selectValue("password", username)
-    print(username, user_pw[0])
     if user_pw and bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
         session['username'] = username
     else:
@@ -108,11 +115,9 @@ def login():
 
 @app.route('/editaccount/', methods=["GET", "POST"])
 def editaccount():
-    print("edit")
     if not "username" in session:
         return redirect('/')
     if request.method == "POST":
-        print("edit_post")
         gender = request.form['gender']
         fav_color = request.form['color']
         age = request.form['age']
@@ -196,6 +201,8 @@ def register():
 def logout():
     if "username" in session:
         session.pop("username")
+    if "viewing" in session:
+        session.pop("viewing")
     return redirect("/")
 
 def ids_are_friends(id1, id2):
@@ -220,6 +227,7 @@ def user_info(id):
         return json.dumps({}), 200
     usermap = {"name":user[0], "color":user[1], "age":user[2], "gender":user[3],
                 "image":user[4], "interests":user[5], "hometown":user[6]}
+    session["viewing"] = id
     my_id = selectValue("id", session["username"])[0]
     is_friend = ids_are_friends(my_id, id)
     if is_friend:
