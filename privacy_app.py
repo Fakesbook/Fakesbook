@@ -92,8 +92,6 @@ def graph():
         "interests"   : (permissions// 10) % 10,
         "hometown": permissions % 10
     }
-    print(permissions)
-    print(perms)
     return render_template('graph.html', users=users, friends=list(friends), name=username, id=id, perms=perms)
 
 @app.route('/login/', methods=["POST"])
@@ -248,7 +246,6 @@ def control_change():
         permissions = permissions + controlStringToInt(v)
         permissions = permissions * 10
     permissions = permissions/10
-    print(permissions)
 
     user = session['username']
 

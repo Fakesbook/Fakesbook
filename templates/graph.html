@@ -295,7 +295,8 @@ function friendRequest(i) {
 }
 
 var panel = document.getElementById("panel");
-panel.innerHTML = "<h3 id='profile_name'></h3>"
+panel.innerHTML = '<button class="btn btn-success" id="edit_profile_button">Edit</button>'
++ "<h3 id='profile_name'></h3>"
 + "<hr />"
 + "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
 + '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
@@ -311,6 +312,9 @@ panel.innerHTML = "<h3 id='profile_name'></h3>"
 + "<h4 id='profile_hometown'></h4>"
 + "<hr />"
 + '<button class="btn btn-success" style="display:none;" id="addfriend_button">Add Friend</button>'
++ '<form id="accept_request"> Accept Friend Request</br>'
+    + '<label><input type="radio" name="test" value="test"'
+    + ' onclick=accept_request()>Test</label><br>'
 + "</div>";
 
 function panelUpdate(i) {
@@ -327,6 +331,8 @@ function panelUpdate(i) {
                     var pinterests = document.getElementById("profile_interests");
                     var phometown = document.getElementById("profile_hometown");
                     var pbutton = document.getElementById("addfriend_button");
+                    var pedit = document.getElementById("edit_profile_button");
+                    var paccept = document.getElementById("accept_request");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
                     page.innerText = "Age: " + data["age"];
@@ -382,9 +388,13 @@ function panelUpdate(i) {
                     if (i != "{{ id }}" && linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
                         pbutton.style = "display:inline-block;"; 
                         pbutton.onclick = function() { friendRequest(i) };
+                        paccept.style = "display:none;";
+                        pedit.style = "display:none;";
                     }
                     else {
                         pbutton.style = "display:none;"; 
+                        paccept.style = "display:inline-block;";
+                        pedit.style = "display:inline-block;";
                     }
                 };
     xhr.onerror = function() { console.log("Error in panel update XHR");};
