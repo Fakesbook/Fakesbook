@@ -63,6 +63,7 @@ label {
 </script>
 <script type="application/json" id="perms">
 {
+    "image": "{{ perms['image'] }}",
     "age": "{{ perms['age'] }}",
     "gender": "{{ perms['gender'] }}",
     "color": "{{ perms['color'] }}",
@@ -563,10 +564,17 @@ function controlChange() {
                         location.reload();
                     }
                    };
+    var image = document.getElementById("image");
+    for (c in image.children) {
+        if (image[c] && image[c].checked == true) {
+            params += image[c].value;
+        }
+    }
 
     var color = document.getElementById("color");
     for (c in color.children) {
         if (color[c] && color[c].checked == true) {
+            params += ";";
             params += color[c].value;
         }
     }
@@ -614,6 +622,39 @@ var bottom = document.getElementById("bottom");
 bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '<div style="width: 100%; overflow: hidden;">'
                     + '<div style="float: left;">'
+                    + "<h4>Image</h4>"
+                    + '<form id="image">'
+                        + '<label id="bottom_image_0"'
+                        + ' onclick=controlChange()'
+                        + ' onmouseover=highlightSettingsBottom(0,"image")'
+                        + ' onmouseout=unhighlightSettingsBottom()'
+                        + '><input type="radio"'
+                        + ' name="image" value="friends"'
+                        {% if perms["image"] == 0 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends</label><br>'
+                        + '<label id="bottom_image_1"'
+                        + ' onclick=controlChange()' 
+                        + ' onmouseover=highlightSettingsBottom(1,"image")'
+                        + ' onmouseout=unhighlightSettingsBottom()' 
+                        + '><input type="radio" name="image" value="fof"'
+                        {% if perms["image"] == 1 %}
+                            + ' checked'
+                        {% endif %}
+                        + '>Friends of Friends</label><br>'
+                        + '<label id="bottom_image_2"'
+                        + ' onclick=controlChange()' 
+                        + ' onmouseover=highlightSettingsBottom(2,"image")'
+                        + ' onmouseout=unhighlightSettingsBottom()' 
+                        + '><input type="radio" name="image" value="everyone"'
+                        {% if perms["image"] == 2 %}
+                            + ' checked'
+                        {% endif %}
+                    + '>Everyone</label>'
+                    + '</form>'
+                    + '</div>'
+                    + '<div style="float: left; margin-left: 5%;">'
                     + "<h4>Favorite Color</h4>"
                     + '<form id="color">'
                         + '<label id="bottom_color_0"'

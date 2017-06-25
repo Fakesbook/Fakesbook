@@ -24,7 +24,7 @@ c.execute("""
       fav_color text default null,
       interests text default null,
       hometown text default null,
-      permissions integer default 22222,
+      permissions integer default 222222,
       requests text default "[]"
    )""")
 c.execute("""
@@ -83,7 +83,8 @@ def graph():
     id = me[1]
     permissions = me[7]
     perms = {
-        "color": (permissions//10000),
+        "image": (permissions//100000),
+        "color": (permissions//10000) % 10,
         "age" : (permissions//1000) % 10,
         "gender" : (permissions//100) % 10,
         "interests"   : (permissions// 10) % 10,
@@ -247,9 +248,9 @@ def user_info(id):
                                 (my_id, id, my_id, id, my_id, id, my_id,id)).fetchall())
     permissions = user[7]
     show = {}
-    # TODO do image as well
     perms = {
-        "color": (permissions//10000),
+        "image": (permissions//100000),
+        "color": (permissions//10000) %10,
         "age" : (permissions//1000) % 10,
         "gender" : (permissions//100) % 10,
         "interests"   : (permissions// 10) % 10,
@@ -272,7 +273,6 @@ def user_info(id):
             elif perms[k] == 2:
                 show[k] = usermap[k]
         show["name"] = usermap["name"]
-        show["image"] = usermap["image"]
     requested = set(json.loads(user[8]))
     my_requested = set(json.loads(c.execute("""SELECT requests FROM User
                                                WHERE id=?""",
