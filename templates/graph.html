@@ -470,7 +470,6 @@ function highlightSettings(category) {
             }
         }
 
-        var brightorange = "#FFB347";
         d3.selectAll("circle").filter(
             function(d) {
                 if (neighboring(myself, d) || neighboring(d, myself)) {
@@ -483,14 +482,15 @@ function highlightSettings(category) {
                 }
                 return false;
             })
-            .style("stroke", brightorange)
+            .style("stroke", "yellow")
             .style("stroke-opacity", "0.75")
             .style("stroke-width", "64px");
     }
     else if (perm == "2") { // Everyone
         d3.selectAll("circle").style("stroke-width", '64px');
         d3.selectAll("circle").style("stroke-opacity", '0.75');
-        d3.selectAll("circle").style("stroke", 'red');
+        var brightorange = "#FFB347";
+        d3.selectAll("circle").style("stroke", brightorange);
     }
     else {
 
@@ -532,7 +532,6 @@ function highlightSettingsBottom(perm, category) {
             }
         }
 
-        var brightorange = "#FFB347";
         d3.selectAll("circle").filter(
             function(d) {
                 if (neighboring(myself, d) || neighboring(d, myself)) {
@@ -545,14 +544,15 @@ function highlightSettingsBottom(perm, category) {
                 }
                 return false;
             })
-            .style("stroke", brightorange)
+            .style("stroke", 'yellow')
             .style("stroke-opacity", "0.75")
             .style("stroke-width", "64px");
     }
     else if (perm == "2") { // Everyone
         d3.selectAll("circle").style("stroke-width", '64px');
         d3.selectAll("circle").style("stroke-opacity", '0.75');
-        d3.selectAll("circle").style("stroke", 'red');
+        var brightorange = "#FFB347";
+        d3.selectAll("circle").style("stroke", brightorange);
     }
     else {
 
