@@ -32,6 +32,10 @@ label {
     margin: 0px;
 }
 
+.pelem {
+    display: inline-block;
+}
+
 </style>
 {% endblock %}
 {% block script %}
@@ -88,7 +92,7 @@ addEvent(window, "resize", function() {window.location = window.location;});
 
 //Constants for the SVG
 var width = window.innerWidth*0.78;
-var height = window.innerHeight*0.8;
+var height = window.innerHeight*0.78;
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
 var svg = d3.select("body").append("svg")
@@ -298,23 +302,23 @@ function friendRequest(i) {
 
 var panel = document.getElementById("panel");
 panel.innerHTML = "<h3 id='profile_name'></h3>"
-+ "<hr />"
 + "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
 + '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
 + 'action="/profile_upload/" method="post">'
 + '<input id="profile_pic_input" name="profile_image" type="file" />'
 + '</form>'
 + '</img>'
-+ "<hr />"
-+ "<small id='panelhelp'></small>"
-+ "<h4 id='profile_color'></h4>"
-+ "<h4 id='profile_age'></h4>"
-+ "<h4 id='profile_gender'></h4>"
-+ "<h4 id='profile_interests'></h4>"
-+ "<h4 id='profile_hometown'></h4>"
-+ '<a href="/editaccount/" class="btn btn-small btn-success" id="edit_profile_button">Edit</a>'
-+ '<button class="btn btn-success" style="display:none;" id="addfriend_button">Add Friend</button>'
-+ "</div>";
++ '<small class="pelem" id="panelimagehelp"></small>'
++ '<hr />'
++ '<small class="pelem" id="panelhelp"></small>'
++ '<h4 id="profile_color"></h4>'
++ '<h4 id="profile_age"></h4>'
++ '<h4 id="profile_gender"></h4>'
++ '<h4 id="profile_interests"></h4>'
++ '<h4 id="profile_hometown"></h4>'
++ '<a href="/editaccount/" class="btn btn-small btn-success pelem" id="edit_profile_button">Edit</a>'
++ '<button class="btn btn-success pelem" style="display:none;" id="addfriend_button">Add Friend</button>'
++ '</div>';
 
 function panelUpdate(i) {
     var xhr = new XMLHttpRequest();
@@ -332,25 +336,33 @@ function panelUpdate(i) {
                     var pbutton = document.getElementById("addfriend_button");
                     var pedit = document.getElementById("edit_profile_button");
                     var phelp = document.getElementById("panelhelp");
+                    var pimghelp = document.getElementById("panelimagehelp");
                     pname.innerText = data["name"];
                     pcolor.innerText = "Favorite Color: " + data["color"];
                     page.innerText = "Age: " + data["age"];
                     pgender.innerText = "Gender: " + data["gender"];
                     pinterests.innerText = "Interests: " + data["interests"];
                     phometown.innerText = "Hometown: " + data["hometown"];
+                    pimghelp.innerText = "";
                     if (data["image"] == "none") {
                         pimg.src = "/static/images/none.png";
                         if (i == "{{ id }}") {
                             pimg.onclick = function() { imageUpload(); };
+                            pimghelp.innerText = "Click to add a profile image!";
                         }
                         else {
                             pimg.onclick = function() {};
                         }
                     }
+                    else if (i != "{{ id }}" && data["image"] == "hidden") {
+                        pimg.src = "/static/images/hidden.png";
+                        pimg.onclick = function() {};
+                    }
                     else {
                         pimg.src = "/pic/" + data["image"];
                         if (i == "{{ id }}") {
                             pimg.onclick = function() { imageTeardown(); };
+                            pimghelp.innerText = "Click to remove your profile image.";
                         }
                         else {
                             pimg.onclick = function() {};

@@ -248,6 +248,7 @@ def user_info(id):
                                 (my_id, id, my_id, id, my_id, id, my_id,id)).fetchall())
     permissions = user[7]
     show = {}
+    # ZNJP PERMISSION STUFF IS HERE
     perms = {
         "image": (permissions//100000),
         "color": (permissions//10000) %10,
@@ -287,6 +288,11 @@ def user_info(id):
 
 @app.route('/pic/<filename>')
 def profile_image(filename):
+    # ZNJP
+    # fun thing to do: when image settings dictate, users see
+    # hidden.jpg instead of the profile image, but using 
+    # direct object references at /pic/<filename> they could
+    # bypass privacy settings to view people's profile images
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/profile_upload/', methods=['POST'])
@@ -324,12 +330,12 @@ def profile_pic_teardown():
     return redirect('/d3/')
 
 def controlStringToInt(string):
-    if string == "everyone":
-        return 2
-    if string == "fof":
-        return 1
     if string == "friends":
         return 0
+    elif string == "fof":
+        return 1
+    else:
+        return 2
 
 @app.route("/control_change/", methods=["POST"])
 def control_change():
