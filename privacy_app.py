@@ -2,13 +2,22 @@ from os import environ, urandom, path, remove as rm_file
 from hmac import HMAC as hmac, compare_digest 
 import json
 import bcrypt
+import sqlite3
 from hashlib import sha256
 from base64 import b64encode, b64decode
 from flask import Flask, request, render_template, session, redirect, flash
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
-import sqlite3
+UPLOAD_FOLDER = "./uploads"
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+
+app = Flask(__name__)
+app.secret_key = b64decode(environ['SECRET_KEY'])
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
+app.config['DEBUG'] = False
+
 conn = sqlite3.connect('app.db', check_same_thread=False)
 
 c = conn.cursor()
@@ -37,15 +46,6 @@ c.execute("""
       constraint friendship unique (f1, f2)
    )""")
 conn.commit()
-
-UPLOAD_FOLDER = "./uploads"
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-
-app = Flask(__name__)
-app.secret_key = b64decode(environ['SECRET_KEY'])
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
-debug = True
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -360,4 +360,4 @@ def control_change():
     return "", 200
 
 if __name__ == '__main__':
-    app.run(debug=debug, port=8080, host='0.0.0.0')    
+    app.run(debug=True, port=8081)

@@ -23,10 +23,18 @@ For all of these, `source venv/bin/activate` is required.
 When finished, use `deactivate` to stop using the app's locally installed
 python3 environment and packages.
 
-**Starting the application on localhost:8080**
+**Starting the PRODUCTION application on localhost:8080**
 
 ```bash
 $ make # Ctrl-c to quit
+```
+
+To change the port the production app runs on, edit `PORT` in `multithread.py`
+
+**Starting the DEVELOPMENT application on localhost:8081**
+
+```bash
+$ make test # Ctrl-c to quit
 ```
 
 **To reset a user's password**
