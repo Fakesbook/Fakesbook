@@ -20,6 +20,22 @@ $ make clean # only if you've run it before - will drop database
 Running the app
 ---------------
 
-```
+For all of these, `source venv/bin/activate` is required.
+
+**Starting the application on localhost:8080**
+
+```bash
 $ make # Ctrl-c to quit
+```
+
+**To reset a user's password**
+
+```bash
+$ python reset_password.py app.db # or wherever the app database is
+```
+
+**To wipe the database completely*
+
+```bash
+$ python reset_db.py app.db
 ```
