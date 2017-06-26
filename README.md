@@ -14,13 +14,14 @@ Setup
 $ virtualenv -p<path/to/python3> venv # only do this once
 $ source venv/bin/activate # or activate.csh, activate.fish depending on shell
 $ pip install -r requirements.txt
-$ make clean # only if you've run it before - will drop database
 ```
 
 Running the app
 ---------------
 
 For all of these, `source venv/bin/activate` is required.
+When finished, use `deactivate` to stop using the app's locally installed
+python3 environment and packages.
 
 **Starting the application on localhost:8080**
 
@@ -34,8 +35,8 @@ $ make # Ctrl-c to quit
 $ python reset_password.py app.db # or wherever the app database is
 ```
 
-**To wipe the database completely*
+**To wipe the database completely**
 
 ```bash
-$ python reset_db.py app.db
+$ make clean
 ```
