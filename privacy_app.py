@@ -307,7 +307,7 @@ def profile_pic_upload():
         fname = secure_filename(file.filename)
         file.save(path.join(app.config['UPLOAD_FOLDER'], fname))
         c = conn.cursor()
-        c.execute("""UPDATE User SET image=? WHERE username=? LIMIT 1""",
+        c.execute("""UPDATE User SET image=? WHERE username=?""",
                         (fname,user))
         conn.commit() 
     return redirect("/d3/")
