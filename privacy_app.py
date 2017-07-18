@@ -322,7 +322,7 @@ def profile_pic_teardown():
         old_img = selectValue("image", user)[0]
     except IndexError:
         old_img = None
-    c.execute("""UPDATE User SET image=? WHERE username=? LIMIT 1""",
+    c.execute("""UPDATE User SET image=? WHERE username=?""",
                         ("none",user))
     conn.commit()
     if old_img:
