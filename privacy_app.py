@@ -13,13 +13,17 @@ UPLOAD_FOLDER = "./uploads"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
+# read the app key from the environment variable
 app.secret_key = b64decode(environ['SECRET_KEY'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# 8 megabyte images, at most
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 app.config['DEBUG'] = False
 
+# establish a connection to the database file
 conn = sqlite3.connect('app.db', check_same_thread=False)
 
+# initial database setup
 c = conn.cursor()
 c.execute("""
    CREATE TABLE IF NOT EXISTS User (
@@ -48,10 +52,12 @@ c.execute("""
 conn.commit()
 
 def allowed_file(filename):
+    """ Checks a user image upload for having the correct file extension """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def selectValue(value, user):
+    """ get an attribute from the database, given a value name and a user """
     if value not in ["id", "username", "password", "gender", "image", 
                      "age", "phone", "fav_color", "interests", "hometown", 
                      "requests"]:
@@ -62,10 +68,12 @@ def selectValue(value, user):
 
 @app.route('/')
 def home():
-   return render_template('home.html', authed="username" in session)
+    """ render the homepage """
+    return render_template('home.html', authed="username" in session)
 
 @app.route('/d3/')
 def graph():
+    """ draw the graph SVG. Note this is embedded in a larger page """
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
@@ -75,14 +83,14 @@ def graph():
     friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
-    try:
+    try: # get the user object which represents the auth'd user
         me = list(filter(lambda u: u[0].capitalize() == username.capitalize(), users))[0]
     except:
         session.pop("username")
         return '', 400
     id = me[1]
     permissions = me[7]
-    perms = {
+    perms = { # Permissions are encoded into a decimal integer
         "image": (permissions//100000),
         "color": (permissions//10000) % 10,
         "age" : (permissions//1000) % 10,
@@ -91,23 +99,28 @@ def graph():
         "hometown": permissions % 10
     }
     if "viewing" in session:
+        # if the user was viewing a profile, reload with that same profile up
         viewing = session["viewing"]
     else:
+        # else load their own profile in the profile panel
         viewing = id
     return render_template('graph.html', users=users, friends=list(friends),
                             name=username, id=id, viewing=viewing, perms=perms)
 
 @app.route('/login/', methods=["POST"])
 def login():
+    """ authenticate the user """
     if "username" in session:
         session.pop("username")
     username = request.form['name'].capitalize()
     password = request.form['password']
     user_pw = selectValue("password", username)
     if user_pw:
+        # hashing passwords with bcrypt
         if bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
             session['username'] = username
         else:
+            # Not worried about this information leak
             flash("Account exists! Incorrect password.")
     else:
         if username == "":
@@ -125,6 +138,7 @@ def login():
 
 @app.route('/editaccount/', methods=["GET", "POST"])
 def editaccount():
+    """ editing values for one's own accout """
     if not "username" in session:
         return redirect('/')
     c = conn.cursor()
@@ -141,7 +155,7 @@ def editaccount():
                                     (age,gender,phone,fav_color,
                                      interests,hometown,session['username']))
         conn.commit()
-        return redirect("/d3/") 
+        return redirect("/d3/") # cause the XHR response to reload the page
     user = c.execute("""SELECT fav_color, age, gender, interests, hometown, phone
                         FROM User where username=? LIMIT 1""",
                         (session["username"],)).fetchone()
@@ -157,6 +171,7 @@ def editaccount():
 
 @app.route('/accountsetup/', methods=["GET", "POST"])
 def accountsetup():
+    """ Initial profile data population """
     if not "username" in session:
         return redirect('/')
     if request.method == "POST":
@@ -179,6 +194,7 @@ def accountsetup():
 
 @app.route('/addfriend/', methods=["POST"])
 def addfriend():
+    """ The JavaScript XHR POSTs to this when users add friends """
     if not "username" in session:
        return redirect("/")
     id = int(selectValue("id", session['username'])[0])
@@ -207,6 +223,7 @@ def addfriend():
 
 @app.route('/logout/')
 def logout():
+    """ Tear down a user session """
     if "username" in session:
         session.pop("username")
     if "viewing" in session:
@@ -214,6 +231,7 @@ def logout():
     return redirect("/")
 
 def ids_are_friends(id1, id2):
+    """ given two IDs, return if they're friends """
     c = conn.cursor()
     is_friend = c.execute("""SELECT count(*) from Friend where (f1=? and f2=?)
                              or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()[0]
@@ -221,6 +239,7 @@ def ids_are_friends(id1, id2):
 
 @app.route('/user/<id>/')
 def user_info(id):
+    """ get the profile data for a user, modulo requesting user's permissions """
     if "username" not in session:
         return "Error", 403
     try:
@@ -258,8 +277,8 @@ def user_info(id):
         "hometown": permissions % 10
     }
     if is_me:
-        show = usermap
-    else:
+        show = usermap # you see all your own data
+    else: # else, replace with "hidden" as needed
         for k in perms:
             if perms[k] == 0:
                 if is_friend:
@@ -288,6 +307,7 @@ def user_info(id):
 
 @app.route('/pic/<filename>')
 def profile_image(filename):
+    """ Get a profile image by filename """
     # ZNJP
     # fun thing to do: when image settings dictate, users see
     # hidden.jpg instead of the profile image, but using 
@@ -297,6 +317,7 @@ def profile_image(filename):
 
 @app.route('/profile_upload/', methods=['POST'])
 def profile_pic_upload():
+    """ handle users uploading images """
     if 'username' not in session or 'profile_image' not in request.files:
         return redirect('/d3/')
     user = session['username']
@@ -314,6 +335,7 @@ def profile_pic_upload():
 
 @app.route('/profile_pic_teardown/', methods=['POST'])
 def profile_pic_teardown():
+    """ Remove user profile image """
     if 'username' not in session:
         return redirect('/d3/')
     user = session['username']
@@ -325,11 +347,12 @@ def profile_pic_teardown():
     c.execute("""UPDATE User SET image=? WHERE username=?""",
                         ("none",user))
     conn.commit()
-    if old_img:
+    if old_img: # delete the old image - TODO shred
         rm_file(path.join(app.config["UPLOAD_FOLDER"], old_img))
     return redirect('/d3/')
 
 def controlStringToInt(string):
+    """ Map controls settings names to decimal representations """
     if string == "friends":
         return 0
     elif string == "fof":
@@ -339,6 +362,7 @@ def controlStringToInt(string):
 
 @app.route("/control_change/", methods=["POST"])
 def control_change():
+    """ Handle POST to update privacy settings """
     if "username" not in session:
         return "", 400
     #values as color;age;gender
@@ -359,5 +383,10 @@ def control_change():
 
     return "", 200
 
+def shred_file(filename):
+    s = subprocess.call("shred {} ;".format(filename))
+    return s == 0
+
 if __name__ == '__main__':
+    # if running with Make test, enable debug, run on port 8081
     app.run(debug=True, port=8081)
