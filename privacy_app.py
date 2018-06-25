@@ -383,6 +383,10 @@ def control_change():
 
     return "", 200
 
+@app.route('/admin/')
+def admin():
+    return render_template("admin.html")
+
 def shred_file(filename):
     s = subprocess.call("shred {} ;".format(filename))
     return s == 0
