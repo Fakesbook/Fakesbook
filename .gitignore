@@ -3,3 +3,4 @@ venv/
 *.db
 *.py[co]
 uploads/*
+*.swp
