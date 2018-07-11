@@ -2,5 +2,6 @@
 venv/
 *.db
 *.py[co]
-uploads/*
+db/uploads/*
 *.swp
+*.tar.gz
