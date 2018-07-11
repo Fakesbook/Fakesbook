@@ -9,7 +9,7 @@ from flask import Flask, request, render_template, session, redirect, flash
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = "./uploads"
+UPLOAD_FOLDER = "./db/uploads"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
@@ -21,7 +21,7 @@ app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 app.config['DEBUG'] = False
 
 # establish a connection to the database file
-conn = sqlite3.connect('app.db', check_same_thread=False)
+conn = sqlite3.connect('./db/app.db', check_same_thread=False)
 
 # initial database setup
 c = conn.cursor()
