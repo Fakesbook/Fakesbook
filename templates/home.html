@@ -5,13 +5,18 @@
             background-size: cover;
             background-color: #404040;
         }
+        .seperator-line {
+            border-right: 6px solid #e4e4e4;
+        }
+        .seperator-padding {
+            padding-left: 2%;
+        }
     </style>
   <link rel="stylesheet" type="text/css" href="/static/modal.css">
 {% endblock %}
 {% block body %}
   <div class="container modal" id="myModal">
-    <div class="modal-content">
-      <form id="form" method="post" action="/login/">
+      <div class="row modal-content">
           {% with messages = get_flashed_messages() %}
           {% if messages %}
           {% for m in messages %}
@@ -19,34 +24,53 @@
           {% endfor %}
           {% endif %}
           {% endwith %}
-          <label for="name"><h3>Name</h3></label>
-          <br />
-          <input type="text" name="name">
-          <br />
-          <label for="password"><h3>Password</h3></label>
-          <br />
-          <input type="password" name="password">
-          <br /><br />
-          <label for="submit"><h3></h3></label>
-          <input id="loginSubmit" type="submit" class="btn btn-primary" value="Log in">
-      </form> 
-    </div>
+          <div class="col-md-6 seperator-line">
+              <h2>Login</h2>
+              <form id="loginForm" method="post" action="/login/">
+                  <label for="name"><h3>Name</h3></label>
+                  <br />
+                  <input type="text" name="name">
+                  <br />
+                  <label for="password"><h3>Password</h3></label>
+                  <br />
+                  <input type="password" name="password">
+                  <br /><br />
+                  <label for="submit"><h3></h3></label>
+                  <input id="loginSubmit" type="submit" class="btn btn-primary" value="Log in">
+              </form> 
+          </div>
+          <div class="col-md-6 seperator-padding">
+              <h2>Register</h2>
+              <form id="registerForm" method="post" action="/register/">
+                  <label for="name"><h3>Name</h3></label>
+                  <br />
+                  <input type="text" name="name">
+                  <br />
+                  <label for="password"><h3>Password</h3></label>
+                  <br />
+                  <input type="password" name="password">
+                  <br /><br />
+                  <label for="submit"><h3></h3></label>
+                  <input id="registerSubmit" type="submit" class="btn btn-primary" value="Register">
+              </form> 
+          </div>
+      </div>
   </div>
   {% if authed %}
-    <a href="/logout/" style="float:right;display: inline-block;margin-right: 1%;" class="btn btn-default">Logout</a>
-    <h2 style="text-align: center;color: white;font-weight: bold">Fakesbook</h2> 
-    <iframe width="100%" height="800px" src="/d3/"></iframe>
+  <a href="/logout/" style="float:right;display: inline-block;margin-right: 1%;" class="btn btn-default">Logout</a>
+  <h2 style="text-align: center;color: white;font-weight: bold">Fakesbook</h2> 
+  <iframe width="100%" height="800px" src="/d3/"></iframe>
   <div>
   </div>
   {% endif %}
-{% endblock %}
-{% block script %}
-<script>
-function refresh() {
-    this.reload(false);
-}
-</script>
-{% if not authed %}
-<script src="/static/loginModal.js"></script>
-{% endif %}
-{% endblock %}
+  {% endblock %}
+  {% block script %}
+  <script>
+      function refresh() {
+          this.reload(false);
+      }
+  </script>
+  {% if not authed %}
+  <script src="/static/loginModal.js"></script>
+  {% endif %}
+  {% endblock %}

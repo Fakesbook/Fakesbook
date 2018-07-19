@@ -97,7 +97,7 @@ def graph():
         "gender" : (permissions//100) % 10,
         "interests"   : (permissions// 10) % 10,
         "hometown": permissions % 10
-    }
+        }
     if "viewing" in session:
         # if the user was viewing a profile, reload with that same profile up
         viewing = session["viewing"]
@@ -105,7 +105,23 @@ def graph():
         # else load their own profile in the profile panel
         viewing = id
     return render_template('graph.html', users=users, friends=list(friends),
-                            name=username, id=id, viewing=viewing, perms=perms)
+            name=username, id=id, viewing=viewing, perms=perms)
+
+    # returns two values the first representing if the username is valid
+# and the second representing if the password is valid
+def checkUsernamePassword(username, input_pw):
+    user_pw = selectValue("password", username)
+    if user_pw:
+        # hashing passwords with bcrypt
+        if bcrypt.checkpw(input_pw.encode('utf-8'), user_pw[0]):
+            return True, True
+        else:
+            return True, False
+    else:
+        return False, False
+
+def checkUsernamePasswordEmpty(username, password):
+    return username == "", password == ""
 
 @app.route('/login/', methods=["POST"])
 def login():
@@ -114,27 +130,50 @@ def login():
         session.pop("username")
     username = request.form['name'].capitalize()
     password = request.form['password']
-    user_pw = selectValue("password", username)
-    if user_pw:
-        # hashing passwords with bcrypt
-        if bcrypt.checkpw(password.encode('utf-8'), user_pw[0]):
-            session['username'] = username
-        else:
-            # Not worried about this information leak
-            flash("Account exists! Incorrect password.")
+    usernameEmpty, pwEmpty = checkUsernamePasswordEmpty(username, password)
+    if usernameEmpty:
+        flash("Can't have an empty username.")
+    elif pwEmpty:
+        flash("Can't have an empty password.")
+
+    usernameOk, pwOk = checkUsernamePassword(username, password)
+
+    if not usernameOk:
+        flash("Incorrect username! Please register or try again.")
+    elif not pwOk:
+        flash("Account exists! Incorrect password.")
     else:
-        if username == "":
-            flash("Can't have an empty username.")
-        elif password == "":
-            flash("Can't have an empty password.")
-        else:
-            c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""",
-                        (username, bcrypt.hashpw(password.encode('utf-8'),
-                          bcrypt.gensalt())))
-            conn.commit()
-            session['username'] = username
-            return redirect("/accountsetup/")
+        session['username'] = username
+
     return redirect('/')
+
+@app.route('/register/', methods=["POST"])
+def register():
+    """ authenticate the user """
+    if "username" in session:
+        session.pop("username")
+    username = request.form['name'].capitalize()
+    password = request.form['password']
+    usernameEmpty, pwEmpty = checkUsernamePasswordEmpty(username, password)
+    if usernameEmpty:
+        flash("Can't have an empty username.")
+    elif pwEmpty:
+        flash("Can't have an empty password.")
+
+    usernameOk, _ = checkUsernamePassword(username, password)
+
+    if usernameOk:
+        flash("Username already exists! Please choose a new one")
+    else:
+        c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""",
+                (username, bcrypt.hashpw(password.encode('utf-8'),
+                    bcrypt.gensalt())))
+        conn.commit()
+        session['username'] = username
+        return redirect("/accountsetup/")
+
+    return redirect("/")
+
 
 @app.route('/editaccount/', methods=["GET", "POST"])
 def editaccount():

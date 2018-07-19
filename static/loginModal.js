@@ -1,11 +1,15 @@
 // Get the modal
 var modal = document.getElementById('myModal');
 
-var btn = document.getElementById("loginSubmit");
+var loginBtn = document.getElementById("loginSubmit");
+var registerBtn = document.getElementById("registerSubmit");
 
 modal.style.display = "block";
 
 // When the user clicks on the button, open the modal
-btn.onclick = function() {
+loginBtn.onclick = function() {
+    modal.style.display = "none";
+}
+registerBtn.onclick = function() {
     modal.style.display = "none";
 }
