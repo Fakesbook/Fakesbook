@@ -102,7 +102,8 @@ if __name__ == '__main__':
 
         permissions = 0
         for _ in range(6):
-            permissions += random.randrange(0,2,1)
+            p = random.randrange(0,10,1)
+            permissions += p if p <= 1 else 2
             permissions *= 10
         permissions /= 10
 
