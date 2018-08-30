@@ -227,9 +227,26 @@ def accountsetup():
                                     (age,gender,phone,fav_color,interests,
                                      hometown,session['username']))
         conn.commit()
-        return redirect("/")
+        return redirect("/profilepicture/")
     return render_template("createaccount.html", target='/accountsetup/',
             gender="", color="", age="", phone="", interests="", hometown="")
+
+@app.route('/profilepicture/', methods=["GET"])
+def profilepicture():
+    return render_template("profilepicture.html")
+
+@app.route('/setprofilepicture/<filename>/', methods=["GET"])
+def setprofilepicture(filename):
+    if 'username' not in session:
+        return redirect('/')
+    user = session['username']
+    if allowed_file(filename):
+        fname = secure_filename(filename)
+        c = conn.cursor()
+        c.execute("""UPDATE User SET image=? WHERE username=?""",
+                        (fname,user))
+        conn.commit() 
+    return redirect("/")
 
 @app.route('/addfriend/', methods=["POST"])
 def addfriend():
