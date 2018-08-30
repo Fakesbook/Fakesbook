@@ -299,14 +299,16 @@ function friendRequest(i) {
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhr.send(params);
 }
-
-var panel = document.getElementById("panel");
-panel.innerHTML = "<h3 id='profile_name'></h3>"
-+ "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
+/*
 + '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
 + 'action="/profile_upload/" method="post">'
 + '<input id="profile_pic_input" name="profile_image" type="file" />'
 + '</form>'
+*/
+
+var panel = document.getElementById("panel");
+panel.innerHTML = "<h3 id='profile_name'></h3>"
++ "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
 + '</img>'
 + '<small class="pelem" id="panelimagehelp"></small>'
 + '<hr />'
@@ -348,7 +350,7 @@ function panelUpdate(i) {
                         pimg.src = "/static/images/none.png";
                         if (i == "{{ id }}") {
                             pimg.onclick = function() { imageUpload(); };
-                            pimghelp.innerText = "Click to add a profile image!";
+                            //pimghelp.innerText = "Click to add a profile image!";
                         }
                         else {
                             pimg.onclick = function() {};
@@ -361,8 +363,8 @@ function panelUpdate(i) {
                     else {
                         pimg.src = "/pic/" + data["image"];
                         if (i == "{{ id }}") {
-                            pimg.onclick = function() { imageTeardown(); };
-                            pimghelp.innerText = "Click to remove your profile image.";
+                            //pimg.onclick = function() { imageTeardown(); };
+                            //pimghelp.innerText = "Click to remove your profile image.";
                         }
                         else {
                             pimg.onclick = function() {};

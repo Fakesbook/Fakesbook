@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+body {
+    margin: 40px;
+}
+
+.wrapper {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-gap: 10px;
+    background-color: lightblue;
+    color: #444;
+    border: 100px;
+    border-color: lightblue;
+}
+
+.box {
+    min-width: 300px;
+}
+
+.box img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+</style>
+<link rel="stylesheet" type="text/css" href="/static/modal.css">
+{% endblock %}
+{% block body %}
+    <script>
+        function selectImage(file) {
+            var url = "/setprofilepicture/"
+            var x = new XMLHttpRequest()
+            x.open("GET", url + file + '/', true);
+            x.onerror = function() { alert("Error, tryagain"); }
+            x.onload = function() {
+                if (x.status == 200) {
+                    location.href = "/"
+                }
+            }
+            x.send();
+        }
+    </script>
+    <h1>Choose a Profile Picture</h1>
+<div class="wrapper">
+    <div class="box">
+        <img src="/pic/baseball.jpg", onclick="selectImage('baseball.jpg')">
+    </div>
+    <div class="box">
+        <img src="/pic/books.png", onclick="selectImage('books.png')">
+    </div>
+    <div class="box">
+        <img src="/pic/football.jpg", onclick="selectImage('football.jpg')">
+    </div>
+    <div class="box">
+        <img src="/pic/robot.jpg", onclick="selectImage('robot.jpg')">
+    </div>
+    <div class="box">
+        <img src="/pic/sunset.jpg", onclick="selectImage('sunset.jpg')">
+    </div>
+    <div class="box">
+        <img src="/pic/cat.jpg", onclick="selectImage('cat.jpg')">
+    </div>
+    <div class="box">
+        <img src="/pic/horse.jpg", onclick="selectImage('horse.jpg')">
+    </div>
+    <div class="box">
+        <img src="/pic/soccer.png", onclick="selectImage('soccer.png')">
+    </div>
+{% endblock %}
