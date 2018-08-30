@@ -1,50 +1,95 @@
-Zoe"-Zach Project
+Fakesbook
 =================
+A teaching platform designed to enable visualization of social networking graphs and data privacy.
 
-# Goal
-To have a website that displays a graph of a social network to its users such that they gain access to one another's information based on friend connections
-and boolean sharing controls they set.
 
-# To Run
+![Creative Commons Attribution-ShareAlike 4.0 International License](https://i.creativecommons.org/l/by-sa/4.0/88x31.png "CC BY")
+This work is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License (CC BY)](https://creativecommons.org/licenses/by/4.0/).
 
-Setup
+Setup and Installation
 -----
 
+### Requirements
+#### Note: Fakesbook has only been tested on MacOS and the most recent releases of Ubuntu.
+
+* Python3
+* Git
+* Virtualenv
+
+First make sure that you have python3 installed either by downloading it from the [python site](https://www.python.org/downloads/), or by installing via the terminal.
+
+##### MacOS:
+via [Homebrew](https://brew.sh/)
+```bash
+$ brew install python
 ```
-$ virtualenv -p<path/to/python3> venv # only do this once
+
+##### Ubuntu
+```bash
+$ sudo apt-get install python3
+```
+
+Then install [virtualenv](https://virtualenv.pypa.io/en/stable/) via pip.
+
+```bash
+$ pip install virtualenv
+```
+
+### Setup
+
+Clone this repository to your desired location and navigate to the repository in a terminal application.
+
+Then setup a virtual environment to contain all of the dependencies for the platform.
+```bash
+$ virtualenv -p$(which python3) venv # only do this once
+```
+
+Next activate the virtual environment and install the requirements.
+```bash
 $ source venv/bin/activate # or activate.csh, activate.fish depending on shell
 $ pip install -r requirements.txt
 ```
+Use `deactivate` to exit the virtualenv.
 
 Running the app
 ---------------
 
-For all of these, `source venv/bin/activate` is required.
-When finished, use `deactivate` to stop using the app's locally installed
-python3 environment and packages.
-
-**Starting the PRODUCTION application on localhost:8080**
-
+Before running the app you need to reactivate the virtual env.
 ```bash
-$ make # Ctrl-c to quit
+$ source venv/bin/activate
 ```
 
-To change the port the production app runs on, edit `PORT` in `multithread.py`
-
-**Starting the DEVELOPMENT application on localhost:8081**
-
+Now you can start a test environment on `localhost:8081` by running:
 ```bash
-$ make test # Ctrl-c to quit
+$ make test
 ```
 
-**To reset a user's password**
+Or you can start a production environement on `localhost:8080` by running:
+```bash
+make run
+```
 
+When you are done running either environment use `$ deactivate` to exit the virtualenv.
+
+Using other Utilities
+-----------
+
+**Reseting a user password**
 ```bash
 $ python reset_password.py app.db # or wherever the app database is
 ```
 
-**To wipe the database completely**
-
+**Save a database**
 ```bash
-$ make clean
+$ python save_db.py path/to/database/directory <name of save file>
+```
+
+**Load a database**
+```bash
+$ python load_db.py <name of save file> path/to/database/directory
+```
+
+**Generate a database**
+```bash
+$ python populate_db.py <name of database file> <name of admin user> # the admin user's name will be used as the password
 ```
