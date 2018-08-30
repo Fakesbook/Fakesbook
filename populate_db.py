@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
     colors = ["red", "blue", "yellow", "green", "orange", "purple", "pink"]
     genders = ["male", "female"]
-    images = [ str(i) for i in range(28)]
+    images = [ str(i) for i in range(8)]
 
     c = conn.cursor()
     for n in graph.nodes:
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             if i not in interest:
                 interest += i + ", "
 
-        image = images.pop(random.randrange(0,len(images),1)) + ".jpg"
+        image = images[random.randrange(0,len(images),1)] + ".jpg"
 
         permissions = 0
         for _ in range(6):
