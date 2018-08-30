@@ -1,4 +1,4 @@
-from os import environ, urandom, path, remove as rm_file
+from os import listdir, environ, urandom, path, remove as rm_file
 from hmac import HMAC as hmac, compare_digest 
 import json
 import bcrypt
@@ -10,12 +10,14 @@ from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "./db/uploads"
+PICTURE_DIR = "./db/pictures"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
 # read the app key from the environment variable
 app.secret_key = b64decode(environ['SECRET_KEY'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['PICTURE_DIR'] = PICTURE_DIR
 # 8 megabyte images, at most
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 app.config['DEBUG'] = False
@@ -233,7 +235,8 @@ def accountsetup():
 
 @app.route('/profilepicture/', methods=["GET"])
 def profilepicture():
-    return render_template("profilepicture.html")
+    pictures = filter(lambda p: allowed_file(path.basename(p)), listdir(app.config['PICTURE_DIR']))
+    return render_template("profilepicture.html", pics=pictures)
 
 @app.route('/setprofilepicture/<filename>/', methods=["GET"])
 def setprofilepicture(filename):
@@ -369,7 +372,7 @@ def profile_image(filename):
     # hidden.jpg instead of the profile image, but using 
     # direct object references at /pic/<filename> they could
     # bypass privacy settings to view people's profile images
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['PICTURE_DIR'], filename)
 
 @app.route('/profile_upload/', methods=['POST'])
 def profile_pic_upload():

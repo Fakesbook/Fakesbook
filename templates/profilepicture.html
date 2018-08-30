@@ -44,28 +44,10 @@ body {
     </script>
     <h1>Choose a Profile Picture</h1>
 <div class="wrapper">
+    {% for pic in pics %}
     <div class="box">
-        <img src="/pic/baseball.jpg", onclick="selectImage('baseball.jpg')">
+        <img src="/pic/{{ pic }}", style='max-width:80%;max-height:256px;height=auto;width=auto',  onclick="selectImage('{{ pic }}')">
     </div>
-    <div class="box">
-        <img src="/pic/books.png", onclick="selectImage('books.png')">
-    </div>
-    <div class="box">
-        <img src="/pic/football.jpg", onclick="selectImage('football.jpg')">
-    </div>
-    <div class="box">
-        <img src="/pic/robot.jpg", onclick="selectImage('robot.jpg')">
-    </div>
-    <div class="box">
-        <img src="/pic/sunset.jpg", onclick="selectImage('sunset.jpg')">
-    </div>
-    <div class="box">
-        <img src="/pic/cat.jpg", onclick="selectImage('cat.jpg')">
-    </div>
-    <div class="box">
-        <img src="/pic/horse.jpg", onclick="selectImage('horse.jpg')">
-    </div>
-    <div class="box">
-        <img src="/pic/soccer.png", onclick="selectImage('soccer.png')">
-    </div>
+    {% endfor %}
+</div>
 {% endblock %}
