@@ -93,3 +93,6 @@ $ python load_db.py <name of save file> path/to/database/directory
 ```bash
 $ python populate_db.py <name of database file> <name of admin user> # the admin user's name will be used as the password
 ```
+
+-----------
+The example profile pictures are in the public domain and can be found at (pexels.com)[https://www.pexels.com/].
