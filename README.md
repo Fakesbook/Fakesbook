@@ -95,4 +95,4 @@ $ python populate_db.py <name of database file> <name of admin user> # the admin
 ```
 
 -----------
-The example profile pictures are in the public domain and can be found at (pexels.com)[https://www.pexels.com/].
+The example profile pictures are in the public domain and can be found at [pexels.com](https://www.pexels.com/).
