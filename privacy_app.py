@@ -1,4 +1,4 @@
-from os import listdir, environ, urandom, path, remove as rm_file
+from os import listdir, environ, urandom, path, makedirs, remove as rm_file
 from hmac import HMAC as hmac, compare_digest 
 import json
 import bcrypt
@@ -9,18 +9,27 @@ from flask import Flask, request, render_template, session, redirect, flash
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = "./db/uploads"
-PICTURE_DIR = "./db/pictures"
+BASE_DIR = "./db"
+UPLOAD_DIR = path.join(BASE_DIR, "uploads")
+PICTURE_DIR = path.join(BASE_DIR, "pictures")
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
 # read the app key from the environment variable
 app.secret_key = b64decode(environ['SECRET_KEY'])
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_DIR'] = UPLOAD_DIR
 app.config['PICTURE_DIR'] = PICTURE_DIR
 # 8 megabyte images, at most
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 app.config['DEBUG'] = False
+
+# setup file tree
+if not path.exists(BASE_DIR):
+    makedirs(BASE_DIR)
+if not path.exists(UPLOAD_DIR):
+    makedirs(UPLOAD_DIR)
+if not path.exists(PICTURE_DIR):
+    makedirs(PICTURE_DIR)
 
 # establish a connection to the database file
 conn = sqlite3.connect('./db/app.db', check_same_thread=False)
@@ -107,7 +116,7 @@ def graph():
         # else load their own profile in the profile panel
         viewing = id
     return render_template('graph.html', users=users, friends=list(friends),
-            name=username, id=id, viewing=viewing, perms=perms)
+            name=username, id=id, viewing=viewing, perms=perms, allow_uploads="true")
 
     # returns two values the first representing if the username is valid
 # and the second representing if the password is valid
@@ -229,7 +238,8 @@ def accountsetup():
                                     (age,gender,phone,fav_color,interests,
                                      hometown,session['username']))
         conn.commit()
-        return redirect("/profilepicture/")
+        return redirect("/")
+        #return redirect("/profilepicture/")
     return render_template("createaccount.html", target='/accountsetup/',
             gender="", color="", age="", phone="", interests="", hometown="")
 
@@ -372,7 +382,8 @@ def profile_image(filename):
     # hidden.jpg instead of the profile image, but using 
     # direct object references at /pic/<filename> they could
     # bypass privacy settings to view people's profile images
-    return send_from_directory(app.config['PICTURE_DIR'], filename)
+    pic_directory = app.config["PICTURE_DIR"] if path.exists(path.join(app.config["PICTURE_DIR"], filename)) else app.config["UPLOAD_DIR"]
+    return send_from_directory(pic_directory, filename)
 
 @app.route('/profile_upload/', methods=['POST'])
 def profile_pic_upload():
@@ -384,8 +395,12 @@ def profile_pic_upload():
     if file.filename == '':
         return redirect('/d3/')
     if file and allowed_file(file.filename):
-        fname = secure_filename(file.filename)
-        file.save(path.join(app.config['UPLOAD_FOLDER'], fname))
+        extension = file.filename.rsplit('.', 1)[1].lower()
+        hasher = sha256()
+        hasher.update(urandom(13))
+        name = hasher.hexdigest()
+        fname = secure_filename(name + "." + extension)
+        file.save(path.join(app.config['UPLOAD_DIR'], fname))
         c = conn.cursor()
         c.execute("""UPDATE User SET image=? WHERE username=?""",
                         (fname,user))
@@ -407,7 +422,7 @@ def profile_pic_teardown():
                         ("none",user))
     conn.commit()
     if old_img: # delete the old image - TODO shred
-        rm_file(path.join(app.config["UPLOAD_FOLDER"], old_img))
+        rm_file(path.join(app.config["UPLOAD_DIR"], old_img))
     return redirect('/d3/')
 
 def controlStringToInt(string):
