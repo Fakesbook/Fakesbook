@@ -8,6 +8,7 @@ from base64 import b64encode, b64decode
 from flask import Flask, request, render_template, session, redirect, flash
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
+from flask_socketio import SocketIO
 
 UPLOAD_FOLDER = "./db/uploads"
 PICTURE_DIR = "./db/pictures"
@@ -21,6 +22,8 @@ app.config['PICTURE_DIR'] = PICTURE_DIR
 # 8 megabyte images, at most
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 app.config['DEBUG'] = False
+
+socketio = SocketIO(app)
 
 # establish a connection to the database file
 conn = sqlite3.connect('./db/app.db', check_same_thread=False)
@@ -68,6 +71,10 @@ def selectValue(value, user):
     return c.execute("""SELECT {v} FROM User WHERE username=? LIMIT 1""".format(v=value),
             (user,)).fetchone()
 
+@socketio.on('my event')
+def handle_my_event(json):
+    print('recieved json: ' + str(json))
+
 @app.route('/')
 def home():
     """ render the homepage """
@@ -108,6 +115,51 @@ def graph():
         viewing = id
     return render_template('graph.html', users=users, friends=list(friends),
             name=username, id=id, viewing=viewing, perms=perms)
+
+@app.route('/graph/')
+def get_graph():
+    if "username" not in session:
+        return redirect('/')
+    c = conn.cursor()
+    users = c.execute("""SELECT username,id,gender,image,phone,
+                                fav_color,age,permissions,interests,hometown
+                                FROM User""").fetchall()
+    friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
+    users.sort(key=lambda u: u[1]) # sort by SQL id
+    username = session['username']
+    try: # get the user object which represents the auth'd user
+        me = list(filter(lambda u: u[0].capitalize() == username.capitalize(), users))[0]
+    except:
+        session.pop("username")
+        return '', 400
+    id = me[1]
+    permissions = me[7]
+    perms = { # Permissions are encoded into a decimal integer
+        "image": (permissions//100000),
+        "color": (permissions//10000) % 10,
+        "age" : (permissions//1000) % 10,
+        "gender" : (permissions//100) % 10,
+        "interests"   : (permissions// 10) % 10,
+        "hometown": permissions % 10
+        }
+    if "viewing" in session:
+        # if the user was viewing a profile, reload with that same profile up
+        viewing = session["viewing"]
+    else:
+        # else load their own profile in the profile panel
+        viewing = id
+
+    def rename_user(u):
+        if u[0] == username:
+            u[0] == "Me"
+            return u
+        else
+            return u
+    users = map(
+    graph_map = ["users" = users, "friends" = list(friends),
+    return render_template('graph.html', users=users, friends=list(friends),
+            name=username, id=id, viewing=viewing, perms=perms)
+
 
     # returns two values the first representing if the username is valid
 # and the second representing if the password is valid
@@ -452,4 +504,5 @@ def shred_file(filename):
 
 if __name__ == '__main__':
     # if running with Make test, enable debug, run on port 8081
-    app.run(debug=True, port=8081)
+    #app.run(debug=True, port=8081)
+    socketio.run(app, host='localhost', port=8081, debug=True)

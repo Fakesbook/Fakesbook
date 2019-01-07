@@ -40,6 +40,13 @@ label {
 {% endblock %}
 {% block script %}
 <script src="/static/d3.v3.min.js"></script>
+<script type="text/javascript" src="/static/socket.io.js"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io.connect('http://' + document.domain + ':' + location.port)
+    socket.on('connect', function() {
+        socket.emit('my event', {data: 'I\'m connected!'})
+    })
+</script>
 <script type="application/json" id="data">
 {
     "nodes": [
@@ -285,6 +292,8 @@ function imageTeardown() {
 }
 
 function friendRequest(i) {
+    socket.emit("friend request", i);
+    /*
     var xhr = new XMLHttpRequest();
     var url = "/addfriend/";
     xhr.open("POST", url, true);
@@ -298,6 +307,7 @@ function friendRequest(i) {
     xhr.onerror = function () { alert("Error, try again");};
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhr.send(params);
+    */
 }
 /*
 + '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
