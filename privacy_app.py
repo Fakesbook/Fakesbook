@@ -7,7 +7,6 @@ from hashlib import sha256
 from base64 import b64encode, b64decode
 from flask import Flask, request, render_template, session, redirect, flash, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
-from flask_socketio import SocketIO
 
 UPLOAD_FOLDER = "./db/uploads"
 PICTURE_DIR = "./db/pictures"
@@ -21,8 +20,6 @@ app.config['PICTURE_DIR'] = PICTURE_DIR
 # 8 megabyte images, at most
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 app.config['DEBUG'] = False
-
-socketio = SocketIO(app)
 
 # establish a connection to the database file
 conn = sqlite3.connect('./db/app.db', check_same_thread=False)
@@ -69,10 +66,6 @@ def selectValue(value, user):
     c = conn.cursor()
     return c.execute("""SELECT {v} FROM User WHERE username=? LIMIT 1""".format(v=value),
             (user,)).fetchone()
-
-@socketio.on('my event')
-def handle_my_event(json):
-    print('recieved json: ' + str(json))
 
 @app.route('/')
 def home():
@@ -151,8 +144,7 @@ def get_perms():
 
     return jsonify(perms)
 
-
-    # returns two values the first representing if the username is valid
+# returns two values the first representing if the username is valid
 # and the second representing if the password is valid
 def checkUsernamePassword(username, input_pw):
     user_pw = selectValue("password", username)
@@ -495,5 +487,4 @@ def shred_file(filename):
 
 if __name__ == '__main__':
     # if running with Make test, enable debug, run on port 8081
-    #app.run(debug=True, port=8081)
-    socketio.run(app, host='localhost', port=8081, debug=True)
+    app.run(debug=True, port=8081)
