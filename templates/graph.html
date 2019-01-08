@@ -40,13 +40,7 @@ label {
 {% endblock %}
 {% block script %}
 <script src="/static/d3.v3.min.js"></script>
-<script type="text/javascript" src="/static/socket.io.js"></script>
-<script type="text/javascript" charset="utf-8">
-    var socket = io.connect('http://' + document.domain + ':' + location.port)
-    socket.on('connect', function() {
-        socket.emit('my event', {data: 'I\'m connected!'})
-    })
-</script>
+<!--
 <script type="application/json" id="data">
 {
     "nodes": [
@@ -72,6 +66,7 @@ label {
     ]
 }    
 </script>
+-->
 <script type="application/json" id="perms">
 {
     "image": "{{ perms['image'] }}",
@@ -97,77 +92,126 @@ var addEvent = function(object, type, callback) {
 
 addEvent(window, "resize", function() {window.location = window.location;});
 
-//Constants for the SVG
-var width = window.innerWidth*0.78;
-var height = window.innerHeight*0.78;
+// get graph data
+var getJSON = function(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+        var status = xhr.status;
+        if (status === 200) {
+            callback(null, xhr.response);
+        } else {
+            callback(status, xhr.response);
+        }
+    };
+    xhr.send();
+};
 
-//Append a SVG to the body of the html page. Assign this SVG as an object to svg
-var svg = d3.select("body").append("svg")
-    .attr("style", "overflow:auto;display: inline-block;")
-    .attr("width", width)
-    .attr("height", height)
-    .call(d3.behavior.zoom().on("zoom", function () {
-        svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-    }))
-    .on("dblclick.zoom", null)
-    .append("g");
+getJSON("/graph/", function(err, rsp) {
+    if (err == null) {
 
-//Set up the colour scale
-var color = d3.scale.category20();
+        var graph = rsp
 
-//Set up the force layout
-var force = d3.layout.force()
-    .charge(-120)
-    .linkDistance(250)
-    .size([width, height]);
+        // setup the svg object
+        var svg = buildSVG()
 
-var drag = force.drag()
-    .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
+        //Set up the colour scale
+        var color = d3.scale.category20();
 
-var data = document.getElementById('data').innerHTML;
-var graph = JSON.parse(data);
+        //Set up the force layout
+        var force = d3.layout.force()
+            .charge(-120)
+            .linkDistance(250)
+            .size([width, height]);
+
+        var drag = force.drag()
+            .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
+
+        var quadtree = d3.geom.quadtree(graph.nodes);
+
+        var svgGraph = buildSVGGraph(graph)
+
+        //Create a dict logging what is connected to what
+        var linkedByIndex = {};
+        for (i = 0; i < graph.nodes.length; i++) {
+            linkedByIndex[i + "," + i] = 1;
+        };
+        graph.links.forEach(function (d) {
+            linkedByIndex[d.source.index + "," + d.target.index] = 1;
+            linkedByIndex[d.target.index + "," + d.source.index] = 1;
+        });
+
+    } else {
+        alert("Unable to get graph data from the server!")
+    }
+})
+
+function buildSVG() {
+
+    //Constants for the SVG
+    var width = window.innerWidth*0.78;
+    var height = window.innerHeight*0.78;
+
+    //Append a SVG to the body of the html page. Assign this SVG as an object to svg
+    return d3.select("body").append("svg")
+        .attr("style", "overflow:auto;display: inline-block;")
+        .attr("width", width)
+        .attr("height", height)
+        .call(d3.behavior.zoom().on("zoom", function () {
+            svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+        }))
+        .on("dblclick.zoom", null)
+        .append("g");
+}
 
 //Creates the graph data structure out of the json data
-force.nodes(graph.nodes)
-    .links(graph.links)
-    .start();
+function buildGraph(graph) {
+    force.nodes(graph.nodes)
+        .links(graph.links)
+        .start();
 
-//Create all the line svgs but without locations yet
-var link = svg.selectAll(".link")
-    .data(graph.links)
-    .enter().append("line")
-    .attr("class", "link")
-    .style("stroke-width", function (d) {
-    return Math.sqrt(d.value);
-});
+    //Create all the line svgs but without locations yet
+    var link = svg.selectAll(".link")
+        .data(graph.links)
+        .enter().append("line")
+        .attr("class", "link")
+        .style("stroke-width", function (d) {
+            return Math.sqrt(d.value);
+        });
 
-var nodeRadius = 15;
+    var nodeRadius = 15;
 
-//Do the same with the circles for the nodes
-var node = svg.selectAll(".node")
-    .data(graph.nodes)
-    .enter().append("g")
-    .attr("class", "node")
-    .call(drag)
-    .on('click', highlightNode);
+    //Do the same with the circles for the nodes
+    var node = svg.selectAll(".node")
+        .data(graph.nodes)
+        .enter().append("g")
+        .attr("class", "node")
+        .call(drag)
+        .on('click', highlightNode);
 
-node.append("circle")
-    .attr("r", nodeRadius)
-    .style("fill", function (d) {
-        return color(d.group);
-    });
+    node.append("circle")
+        .attr("r", nodeRadius)
+        .style("fill", function (d) {
+            return color(d.group);
+        });
 
-node.append("text")
-    .attr("dx", nodeRadius + 4)
-    .attr("dy", 10)
-    .text(function(d) { return d.id })
-    .style("stroke", "black");
+    node.append("text")
+        .attr("dx", nodeRadius + 4)
+        .attr("dy", 10)
+        .text(function(d) { return d.id })
+        .style("stroke", "black");
+
+    return {
+        nodes: node,
+        links: link
+    };
+}
 
 var padding = 120, // separation between circles
     radius=nodeRadius;
 
-function collide(alpha) {
-  var quadtree = d3.geom.quadtree(graph.nodes);
+function collide(alpha, quadtree) {
   return function(d) {
         var rb = 2*radius + padding,
         nx1 = d.x - rb,
@@ -198,23 +242,11 @@ function collide(alpha) {
   };
 }
 
-var clicked;
-//Toggle stores whether the highlighting is on
-var toggle = 0;
 function highlightNode() {
     d = d3.select(this).node().__data__;
     panelUpdate(d.group);
-    clicked=d.id;
 }
-//Create a dict logging what is connected to what
-var linkedByIndex = {};
-for (i = 0; i < graph.nodes.length; i++) {
-    linkedByIndex[i + "," + i] = 1;
-};
-graph.links.forEach(function (d) {
-    linkedByIndex[d.source.index + "," + d.target.index] = 1;
-    linkedByIndex[d.target.index + "," + d.source.index] = 1;
-});
+
 //This function looks up whether a pair are neighbors
 function neighboring(a, b) {
     return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index];
@@ -292,8 +324,6 @@ function imageTeardown() {
 }
 
 function friendRequest(i) {
-    socket.emit("friend request", i);
-    /*
     var xhr = new XMLHttpRequest();
     var url = "/addfriend/";
     xhr.open("POST", url, true);
@@ -307,14 +337,7 @@ function friendRequest(i) {
     xhr.onerror = function () { alert("Error, try again");};
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhr.send(params);
-    */
 }
-/*
-+ '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
-+ 'action="/profile_upload/" method="post">'
-+ '<input id="profile_pic_input" name="profile_image" type="file" />'
-+ '</form>'
-*/
 
 var panel = document.getElementById("panel");
 panel.innerHTML = "<h3 id='profile_name'></h3>"
