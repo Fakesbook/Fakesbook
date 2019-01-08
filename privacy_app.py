@@ -5,8 +5,7 @@ import bcrypt
 import sqlite3
 from hashlib import sha256
 from base64 import b64encode, b64decode
-from flask import Flask, request, render_template, session, redirect, flash
-from flask import send_from_directory
+from flask import Flask, request, render_template, session, redirect, flash, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO
 
@@ -121,19 +120,26 @@ def get_graph():
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
-    users = c.execute("""SELECT username,id,gender,image,phone,
-                                fav_color,age,permissions,interests,hometown
-                                FROM User""").fetchall()
+    users = c.execute("""SELECT username,id FROM User""").fetchall()
     friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
-    try: # get the user object which represents the auth'd user
-        me = list(filter(lambda u: u[0].capitalize() == username.capitalize(), users))[0]
-    except:
-        session.pop("username")
-        return '', 400
-    id = me[1]
-    permissions = me[7]
+
+    nodes = list(map(lambda u: {"id":"Me", "group":u[1]} if u[0] == username else {"id":u[0], "group":u[1]}, users))
+    links = list(map(lambda f: {"source":f[0]-1, "target":f[1]-1, "value":10}, list(friends)))
+
+    graph_map = {"nodes" : nodes, "links" : links}
+    return jsonify(graph_map)
+
+@app.route('/perms/')
+def get_perms():
+    if "username" not in session:
+        return redirect('/')
+    c = conn.cursor()
+    user = c.execute("""SELECT id,permissions FROM User where username=? LIMIT 1""",
+                        (session["username"],)).fetchone()
+    id = user[0]
+    permissions = user[1]
     perms = { # Permissions are encoded into a decimal integer
         "image": (permissions//100000),
         "color": (permissions//10000) % 10,
@@ -142,23 +148,8 @@ def get_graph():
         "interests"   : (permissions// 10) % 10,
         "hometown": permissions % 10
         }
-    if "viewing" in session:
-        # if the user was viewing a profile, reload with that same profile up
-        viewing = session["viewing"]
-    else:
-        # else load their own profile in the profile panel
-        viewing = id
 
-    def rename_user(u):
-        if u[0] == username:
-            u[0] == "Me"
-            return u
-        else
-            return u
-    users = map(
-    graph_map = ["users" = users, "friends" = list(friends),
-    return render_template('graph.html', users=users, friends=list(friends),
-            name=username, id=id, viewing=viewing, perms=perms)
+    return jsonify(perms)
 
 
     # returns two values the first representing if the username is valid
