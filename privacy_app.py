@@ -108,29 +108,21 @@ def graph():
     return render_template('graph.html', users=users, friends=list(friends),
             name=username, id=id, viewing=viewing, perms=perms)
 
-@app.route('/graph/')
-def get_graph():
-    if "username" not in session:
-        return redirect('/')
+def get_graph(username):
     c = conn.cursor()
     users = c.execute("""SELECT username,id FROM User""").fetchall()
     friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
-    username = session['username']
 
     nodes = list(map(lambda u: {"id":"Me", "group":u[1]} if u[0] == username else {"id":u[0], "group":u[1]}, users))
     links = list(map(lambda f: {"source":f[0]-1, "target":f[1]-1, "value":10}, list(friends)))
 
-    graph_map = {"nodes" : nodes, "links" : links}
-    return jsonify(graph_map)
+    return {"nodes" : nodes, "links" : links}
 
-@app.route('/perms/')
-def get_perms():
-    if "username" not in session:
-        return redirect('/')
+def get_perms(username):
     c = conn.cursor()
     user = c.execute("""SELECT id,permissions FROM User where username=? LIMIT 1""",
-                        (session["username"],)).fetchone()
+                        (username,)).fetchone()
     id = user[0]
     permissions = user[1]
     perms = { # Permissions are encoded into a decimal integer
@@ -142,7 +134,16 @@ def get_perms():
         "hometown": permissions % 10
         }
 
-    return jsonify(perms)
+    return perms
+
+@app.route('/graph_data/')
+def get_graph_data():
+    if "username" not in session:
+        return jsonify({})
+    graph = get_graph(session["username"])
+    perms = get_perms(session["username"])
+
+    return {"graph" : graph, "perms" : perms}
 
 # returns two values the first representing if the username is valid
 # and the second representing if the password is valid
