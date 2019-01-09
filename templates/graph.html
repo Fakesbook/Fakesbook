@@ -78,19 +78,22 @@ label {
 }
 </script>
 <script>
-// Utility for adding event handlers
-var addEvent = function(object, type, callback) {
-    if (object == null || typeof(object) == 'undefined') return;
-    if (object.addEventListener) {
-        object.addEventListener(type, callback, false);
-    } else if (object.attachEvent) {
-        object.attachEvent("on" + type, callback);
-    } else {
-        object["on"+type] = callback;
-    }
-};
 
-addEvent(window, "resize", function() {window.location = window.location;});
+    //Constants for the SVG
+    var width = window.innerWidth*0.78;
+    var height = window.innerHeight*0.78;
+
+    //Append a SVG to the body of the html page. Assign this SVG as an object to svg
+    var svg = d3.select("body").append("svg")
+    .attr("style", "overflow:auto;display: inline-block;")
+    .attr("width", width)
+    .attr("height", height)
+    .call(d3.behavior.zoom().on("zoom", function () {
+        svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+    }))
+    .on("dblclick.zoom", null)
+    .append("g");
+
 
 // get graph data
 var getJSON = function(url, callback) {
@@ -114,7 +117,6 @@ getJSON("/graph/", function(err, rsp) {
         var graph = rsp
 
         // setup the svg object
-        var svg = buildSVG()
 
         //Set up the colour scale
         var color = d3.scale.category20();
@@ -130,7 +132,8 @@ getJSON("/graph/", function(err, rsp) {
 
         var quadtree = d3.geom.quadtree(graph.nodes);
 
-        var svgGraph = buildSVGGraph(graph)
+        var nodeRadius = 15;
+        var svgGraph = buildSVGGraph(graph, nodeRadius)
 
         //Create a dict logging what is connected to what
         var linkedByIndex = {};
@@ -149,24 +152,11 @@ getJSON("/graph/", function(err, rsp) {
 
 function buildSVG() {
 
-    //Constants for the SVG
-    var width = window.innerWidth*0.78;
-    var height = window.innerHeight*0.78;
 
-    //Append a SVG to the body of the html page. Assign this SVG as an object to svg
-    return d3.select("body").append("svg")
-        .attr("style", "overflow:auto;display: inline-block;")
-        .attr("width", width)
-        .attr("height", height)
-        .call(d3.behavior.zoom().on("zoom", function () {
-            svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-        }))
-        .on("dblclick.zoom", null)
-        .append("g");
 }
 
 //Creates the graph data structure out of the json data
-function buildGraph(graph) {
+function buildSVGGraph(graph, nodeRadius) {
     force.nodes(graph.nodes)
         .links(graph.links)
         .start();
@@ -180,7 +170,6 @@ function buildGraph(graph) {
             return Math.sqrt(d.value);
         });
 
-    var nodeRadius = 15;
 
     //Do the same with the circles for the nodes
     var node = svg.selectAll(".node")
@@ -208,11 +197,9 @@ function buildGraph(graph) {
     };
 }
 
-var padding = 120, // separation between circles
-    radius=nodeRadius;
-
-function collide(alpha, quadtree) {
+function collide(alpha, quadtree, radius) {
   return function(d) {
+        var padding = 120
         var rb = 2*radius + padding,
         nx1 = d.x - rb,
         nx2 = d.x + rb,
@@ -865,5 +852,18 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '</div>'
                         ;
 
+// Utility for adding event handlers
+var addEvent = function(object, type, callback) {
+    if (object == null || typeof(object) == 'undefined') return;
+    if (object.addEventListener) {
+        object.addEventListener(type, callback, false);
+    } else if (object.attachEvent) {
+        object.attachEvent("on" + type, callback);
+    } else {
+        object["on"+type] = callback;
+    }
+};
+
+addEvent(window, "resize", function() {window.location = window.location;});
 </script>
 {% endblock %}
