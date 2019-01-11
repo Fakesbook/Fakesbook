@@ -143,7 +143,7 @@ def get_graph_data():
     graph = get_graph(session["username"])
     perms = get_perms(session["username"])
 
-    return {"graph" : graph, "perms" : perms}
+    return jsonify({"graph" : graph, "perms" : perms})
 
 # returns two values the first representing if the username is valid
 # and the second representing if the password is valid
