@@ -67,6 +67,7 @@ label {
 }    
 </script>
 -->
+<!--
 <script type="application/json" id="perms">
 {
     "image": "{{ perms['image'] }}",
@@ -76,6 +77,7 @@ label {
     "hometown": "{{ perms['hometown'] }}",
     "interests": "{{ perms['interests'] }}"
 }
+-->
 </script>
 <script>
 
@@ -94,6 +96,36 @@ label {
     .on("dblclick.zoom", null)
     .append("g");
 
+//Set up the colour scale
+var color = d3.scale.category20();
+
+//Set up the force layout
+var force = d3.layout.force()
+    .charge(-120)
+    .gravity(0.1)
+    .linkDistance(250)
+    .size([width, height]);
+
+//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
+force.on("tick", tick)
+
+var drag = force.drag()
+    .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
+
+var nodeRadius = 15;
+
+var link = svg.selectAll(".link")
+    .data([])
+
+var node = svg.selectAll(".node")
+    .data([])
+
+//Create a dict logging what is connected to what
+var linkedByIndex = {};
+
+var quadtree = d3.geom.quadtree([]);
+
+var perms = {};
 
 // get graph data
 var getJSON = function(url, callback) {
@@ -111,58 +143,31 @@ var getJSON = function(url, callback) {
     xhr.send();
 };
 
-getJSON("/graph/", function(err, rsp) {
+getJSON("/graph_data/", function(err, rsp) {
     if (err == null) {
 
-        var graph = rsp
-
-        // setup the svg object
-
-        //Set up the colour scale
-        var color = d3.scale.category20();
-
-        //Set up the force layout
-        var force = d3.layout.force()
-            .charge(-120)
-            .linkDistance(250)
-            .size([width, height]);
-
-        var drag = force.drag()
-            .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
-
-        var quadtree = d3.geom.quadtree(graph.nodes);
-
-        var nodeRadius = 15;
-        var svgGraph = buildSVGGraph(graph, nodeRadius)
-
-        //Create a dict logging what is connected to what
-        var linkedByIndex = {};
-        for (i = 0; i < graph.nodes.length; i++) {
-            linkedByIndex[i + "," + i] = 1;
-        };
-        graph.links.forEach(function (d) {
-            linkedByIndex[d.source.index + "," + d.target.index] = 1;
-            linkedByIndex[d.target.index + "," + d.source.index] = 1;
-        });
+        restart(rsp.graph)
+        perms = rsp.perms
 
     } else {
         alert("Unable to get graph data from the server!")
     }
 })
 
-function buildSVG() {
-
-
+function restart(graph) {
+    buildSVGGraph(graph)
+    buildLinkedIndex(graph)
+    quadtree = d3.geom.quadtree(graph.nodes);
 }
 
 //Creates the graph data structure out of the json data
-function buildSVGGraph(graph, nodeRadius) {
+function buildSVGGraph(graph) {
     force.nodes(graph.nodes)
         .links(graph.links)
         .start();
 
     //Create all the line svgs but without locations yet
-    var link = svg.selectAll(".link")
+    link = svg.selectAll(".link")
         .data(graph.links)
         .enter().append("line")
         .attr("class", "link")
@@ -172,7 +177,7 @@ function buildSVGGraph(graph, nodeRadius) {
 
 
     //Do the same with the circles for the nodes
-    var node = svg.selectAll(".node")
+    node = svg.selectAll(".node")
         .data(graph.nodes)
         .enter().append("g")
         .attr("class", "node")
@@ -190,43 +195,48 @@ function buildSVGGraph(graph, nodeRadius) {
         .attr("dy", 10)
         .text(function(d) { return d.id })
         .style("stroke", "black");
-
-    return {
-        nodes: node,
-        links: link
-    };
 }
 
-function collide(alpha, quadtree, radius) {
-  return function(d) {
-        var padding = 120
-        var rb = 2*radius + padding,
-        nx1 = d.x - rb,
-        nx2 = d.x + rb,
-        ny1 = d.y - rb,
-        ny2 = d.y + rb;
-    quadtree.visit(function(quad, x1, y1, x2, y2) {
-      if (quad.point && (quad.point !== d)) {
-        var x = d.x - quad.point.x,
-            y = d.y - quad.point.y,
-            l = Math.sqrt(x * x + y * y);
-          if (l < rb) {
-          l = (l - rb) / l * alpha;
-          x *= l;
-          y *= l;
-          if (d.id != "Me") {
-              d.x -= x;
-              d.y -= y;
-          }
-          if (quad.point.id != "Me") {
-              quad.point.x += x;
-              quad.point.y += y;
-          }
-        }
-      }
-      return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+function buildLinkedIndex(graph) {
+    for (i = 0; i < graph.nodes.length; i++) {
+        linkedByIndex[i + "," + i] = 1;
+    };
+    graph.links.forEach(function (d) {
+        linkedByIndex[d.source.index + "," + d.target.index] = 1;
+        linkedByIndex[d.target.index + "," + d.source.index] = 1;
     });
-  };
+}
+
+function collide(alpha) {
+    return function(d) {
+        var padding = 120
+        var rb = 2*nodeRadius + padding,
+            nx1 = d.x - rb,
+            nx2 = d.x + rb,
+            ny1 = d.y - rb,
+            ny2 = d.y + rb;
+        quadtree.visit(function(quad, x1, y1, x2, y2) {
+            if (quad.point && (quad.point !== d)) {
+                var x = d.x - quad.point.x,
+                    y = d.y - quad.point.y,
+                    l = Math.sqrt(x * x + y * y);
+                if (l < rb) {
+                    l = (l - rb) / l * alpha;
+                    x *= l;
+                    y *= l;
+                    if (d.id != "Me") {
+                        d.x -= x;
+                        d.y -= y;
+                    }
+                    if (quad.point.id != "Me") {
+                        quad.point.x += x;
+                        quad.point.y += y;
+                    }
+                }
+            }
+            return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+        });
+    };
 }
 
 function highlightNode() {
@@ -239,8 +249,7 @@ function neighboring(a, b) {
     return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index];
 }
 
-//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-force.on("tick", function () {
+function tick() {
     node.attr("id", function (d) {
         if (d.id == "Me") {
             d.fixed = true;
@@ -253,21 +262,21 @@ force.on("tick", function () {
         return d.source.x;
     })
         .attr("y1", function (d) {
-        return d.source.y;
-    })
+            return d.source.y;
+        })
         .attr("x2", function (d) {
-        return d.target.x;
-    })
+            return d.target.x;
+        })
         .attr("y2", function (d) {
-        return d.target.y;
-    });
+            return d.target.y;
+        });
 
     node.attr("cx", function (d) {
         return d.x;
     })
         .attr("cy", function (d) {
             return d.y;
-    });
+        });
 
     node.each(collide(0.5));
 
@@ -275,16 +284,16 @@ force.on("tick", function () {
         return d.x;
     })
         .attr("cy", function (d) {
-        return d.y;
-    });
+            return d.y;
+        });
 
     d3.selectAll("text").attr("x", function (d) {
         return d.x;
     })
         .attr("y", function (d) {
-        return d.y;
-    });
-});
+            return d.y;
+        });
+}
 
 d3.select("body").append("div")
     .attr("id", "panel")
@@ -459,8 +468,6 @@ function panelUpdate(i) {
     xhr.onerror = function() { console.log("Error in panel update XHR");};
     xhr.send(null);
 }
-
-var perms = JSON.parse(document.getElementById("perms").innerHTML);
 
 function highlightSettings(category) {
     var e = document.getElementById("profile_" + category);
