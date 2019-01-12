@@ -107,7 +107,7 @@ var force = d3.layout.force()
     .size([width, height]);
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-force.on("tick", tick)
+force.on("end", tick)
 
 var drag = force.drag()
     .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
@@ -115,10 +115,8 @@ var drag = force.drag()
 var nodeRadius = 15;
 
 var link = svg.selectAll(".link")
-    .data([])
 
 var node = svg.selectAll(".node")
-    .data([])
 
 //Create a dict logging what is connected to what
 var linkedByIndex = {};
@@ -143,16 +141,27 @@ var getJSON = function(url, callback) {
     xhr.send();
 };
 
-getJSON("/graph_data/", function(err, rsp) {
-    if (err == null) {
+function curryData() {
+    return function () {
+        console.log("getting data")
+        getJSON("/graph_data/", function(err, rsp) {
+            if (err == null) {
 
-        restart(rsp.graph)
-        perms = rsp.perms
+                restart(rsp.graph)
+                perms = rsp.perms
 
-    } else {
-        alert("Unable to get graph data from the server!")
+                setTimeout(curryData(), 10000)
+
+            } else {
+                alert("Unable to get graph data from the server!")
+            }
+        })
     }
-})
+}
+
+curryData()()
+
+setTimeout(curryData(), 10000)
 
 function restart(graph) {
     buildSVGGraph(graph)
@@ -162,14 +171,14 @@ function restart(graph) {
 
 //Creates the graph data structure out of the json data
 function buildSVGGraph(graph) {
+    force.stop();
     force.nodes(graph.nodes)
-        .links(graph.links)
-        .start();
+       .links(graph.links)
 
     //Create all the line svgs but without locations yet
-    link = svg.selectAll(".link")
-        .data(graph.links)
-        .enter().append("line")
+    link = link.data(graph.links)
+    link.exit().remove()
+    link.enter().append("line")
         .attr("class", "link")
         .style("stroke-width", function (d) {
             return Math.sqrt(d.value);
@@ -177,9 +186,9 @@ function buildSVGGraph(graph) {
 
 
     //Do the same with the circles for the nodes
-    node = svg.selectAll(".node")
-        .data(graph.nodes)
-        .enter().append("g")
+    node = node.data(graph.nodes)
+    node.exit().remove()
+    node.enter().append("g")
         .attr("class", "node")
         .call(drag)
         .on('click', highlightNode);
@@ -195,6 +204,8 @@ function buildSVGGraph(graph) {
         .attr("dy", 10)
         .text(function(d) { return d.id })
         .style("stroke", "black");
+
+    force.start()
 }
 
 function buildLinkedIndex(graph) {
