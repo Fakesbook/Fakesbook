@@ -107,7 +107,7 @@ var force = d3.layout.force()
     .size([width, height]);
 
 //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-force.on("end", tick)
+force.on("tick", tick)
 
 var drag = force.drag()
     .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
@@ -115,7 +115,6 @@ var drag = force.drag()
 var nodeRadius = 15;
 
 var link = svg.selectAll(".link")
-
 var node = svg.selectAll(".node")
 
 //Create a dict logging what is connected to what
@@ -171,13 +170,19 @@ function restart(graph) {
 
 //Creates the graph data structure out of the json data
 function buildSVGGraph(graph) {
-    force.stop();
-    force.nodes(graph.nodes)
-       .links(graph.links)
+    //force.nodes(graph.nodes)
+     //  .links(graph.links)
 
     //Create all the line svgs but without locations yet
-    link = link.data(graph.links)
-    link.exit().remove()
+    newLinks = graph.links.map(function(l) {
+        if (!force.links().filter(function(d) { return d.source == l.source && d.target == l.target })) {
+            return l
+        }
+    })
+    for (var i = 0; i < newLinks.length; i++) {
+        force.links().push(newLinks[i])
+    }
+    link = link.data(force.links())
     link.enter().append("line")
         .attr("class", "link")
         .style("stroke-width", function (d) {
@@ -186,8 +191,12 @@ function buildSVGGraph(graph) {
 
 
     //Do the same with the circles for the nodes
+    newNodes = graph.nodes.map(function(n) {
+        if (!force.nodes().filter(function(d) { return d.id == n.id })) {
+            return n
+        }
+    })
     node = node.data(graph.nodes)
-    node.exit().remove()
     node.enter().append("g")
         .attr("class", "node")
         .call(drag)
