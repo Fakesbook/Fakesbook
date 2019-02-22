@@ -142,7 +142,6 @@ var getJSON = function(url, callback) {
 
 function curryData() {
     return function () {
-        console.log("getting data")
         getJSON("/graph_data/", function(err, rsp) {
             if (err == null) {
 
@@ -376,11 +375,13 @@ function friendRequest(i) {
     var url = "/addfriend/";
     xhr.open("POST", url, true);
     var params = "target=" + i;
+    xhr.responseType = 'json';
     xhr.onload = function () { 
                     if (xhr.status == 200) {
                         var b = document.getElementById("addfriend_button");
                         b.style = "display:none;";
-                        location.reload();
+                        curryData()()
+                        panelUpdate(xhr.response.id)
                     }};
     xhr.onerror = function () { alert("Error, try again");};
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -654,7 +655,7 @@ function controlChange() {
     xhr.open("POST", url, true);
     xhr.onload = function () {
                     if (xhr.status == 200) {
-                        location.reload();
+                        curryData()()
                     }
                    };
     var image = document.getElementById("image");
