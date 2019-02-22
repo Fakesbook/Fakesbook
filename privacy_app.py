@@ -314,7 +314,7 @@ def addfriend():
         c.execute("""UPDATE User set requests=? where id=?""", 
                  (json.dumps(list(targ_requests)), targ_id))
     conn.commit()
-    return "Success", 200
+    return jsonify({"id": targ_id})
 
 @app.route('/logout/')
 def logout():
@@ -476,7 +476,7 @@ def control_change():
     c.execute("""UPDATE User SET permissions=? WHERE username=?""", (permissions,user))
     conn.commit()
 
-    return "", 200
+    return "Success 200"
 
 @app.route('/admin/')
 def admin():
