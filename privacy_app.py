@@ -78,10 +78,8 @@ def graph():
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
-    users = c.execute("""SELECT username,id,gender,image,phone,
-                                fav_color,age,permissions,interests,hometown
+    users = c.execute("""SELECT username,id,permissions
                                 FROM User""").fetchall()
-    friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
     try: # get the user object which represents the auth'd user
@@ -90,7 +88,7 @@ def graph():
         session.pop("username")
         return '', 400
     id = me[1]
-    permissions = me[7]
+    permissions = me[2]
     perms = { # Permissions are encoded into a decimal integer
         "image": (permissions//100000),
         "color": (permissions//10000) % 10,
@@ -105,8 +103,8 @@ def graph():
     else:
         # else load their own profile in the profile panel
         viewing = id
-    return render_template('graph.html', users=users, friends=list(friends),
-            name=username, id=id, viewing=viewing, perms=perms)
+    return render_template('graph.html', name=username, id=id,
+            viewing=viewing, perms=perms)
 
 def get_graph(username):
     c = conn.cursor()
@@ -136,14 +134,23 @@ def get_perms(username):
 
     return perms
 
-@app.route('/graph_data/')
-def get_graph_data():
+@app.route('/all_data/')
+def get_all_data():
     if "username" not in session:
         return jsonify({})
     graph = get_graph(session["username"])
     perms = get_perms(session["username"])
 
     return jsonify({"graph" : graph, "perms" : perms})
+
+@app.route('/perm_data/')
+def get_perm_data():
+    if "username" not in session:
+        return jsonify({})
+
+    perms = get_perms(session["username"])
+
+    return jsonify({"perms" : perms})
 
 # returns two values the first representing if the username is valid
 # and the second representing if the password is valid
