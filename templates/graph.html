@@ -48,844 +48,844 @@ label {
 
     //Append a SVG to the body of the html page. Assign this SVG as an object to svg
     var svg = d3.select("body").append("svg")
-    .attr("style", "overflow:auto;display: inline-block;")
-    .attr("width", width)
-    .attr("height", height)
-    .call(d3.behavior.zoom().on("zoom", function () {
-        svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-    }))
-    .on("dblclick.zoom", null)
-    .append("g");
+        .attr("style", "overflow:auto;display: inline-block;")
+        .attr("width", width)
+        .attr("height", height)
+        .call(d3.behavior.zoom().on("zoom", function () {
+            svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+        }))
+        .on("dblclick.zoom", null)
+        .append("g");
 
-//Set up the colour scale
-var color = d3.scale.category20();
+    //Set up the colour scale
+    var color = d3.scale.category20();
 
-//Set up the force layout
-var force = d3.layout.force()
-    .charge(-120)
-    .gravity(0.1)
-    .linkDistance(250)
-    .size([width, height]);
+    //Set up the force layout
+    var force = d3.layout.force()
+        .charge(-120)
+        .gravity(0.1)
+        .linkDistance(250)
+        .size([width, height]);
 
-//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
-force.on("tick", tick)
+    //Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
+    force.on("tick", tick)
 
-var drag = force.drag()
-    .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
+    var drag = force.drag()
+        .on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); })
 
-var nodeRadius = 15;
+    var nodeRadius = 15;
 
-var link = svg.selectAll(".link")
-var node = svg.selectAll(".node")
+    var link = svg.selectAll(".link")
+    var node = svg.selectAll(".node")
 
-//Create a dict logging what is connected to what
-var linkedByIndex = {};
+    //Create a dict logging what is connected to what
+    var linkedByIndex = {};
 
-var quadtree = d3.geom.quadtree([]);
+    var quadtree = d3.geom.quadtree([]);
 
-var perms = {};
+    var perms = {};
 
-// get graph data
-var getJSON = function(url, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'json';
-    xhr.onload = function() {
-        var status = xhr.status;
-        if (status === 200) {
-            callback(null, xhr.response);
-        } else {
-            callback(status, xhr.response);
-        }
+    // get graph data
+    var getJSON = function(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'json';
+        xhr.onload = function() {
+            var status = xhr.status;
+            if (status === 200) {
+                callback(null, xhr.response);
+            } else {
+                callback(status, xhr.response);
+            }
+        };
+        xhr.send();
     };
-    xhr.send();
-};
 
-function curryData() {
-    return function () {
-        getJSON("/all_data/", function(err, rsp) {
-            if (err == null) {
+    function curryData() {
+        return function () {
+            getJSON("/all_data/", function(err, rsp) {
+                if (err == null) {
 
-                restart(rsp.graph)
-                perms = rsp.perms
+                    restart(rsp.graph)
+                    perms = rsp.perms
 
-                setTimeout(curryData(), 10000)
+                    setTimeout(curryData(), 10000)
 
-            } else {
-                alert("Unable to get graph data from the server!")
-            }
-        })
+                } else {
+                    alert("Unable to get graph data from the server!")
+                }
+            })
+        }
     }
-}
 
-function curryPermData() {
-    return function () {
-        getJSON("/perm_data/", function(err, rsp) {
-            if (err == null) {
+    function curryPermData() {
+        return function () {
+            getJSON("/perm_data/", function(err, rsp) {
+                if (err == null) {
 
-                perms = rsp.perms
+                    perms = rsp.perms
 
-            } else {
-                alert("Unable to get permissions data from the server!")
-            }
-        })
+                } else {
+                    alert("Unable to get permissions data from the server!")
+                }
+            })
+        }
     }
-}
 
-curryData()()
+    curryData()()
 
-setTimeout(curryData(), 10000)
+    setTimeout(curryData(), 10000)
 
-function restart(graph) {
-    buildSVGGraph(graph)
-    buildLinkedIndex(graph)
-    quadtree = d3.geom.quadtree(graph.nodes);
-}
+    function restart(graph) {
+        buildSVGGraph(graph)
+        buildLinkedIndex(graph)
+        quadtree = d3.geom.quadtree(graph.nodes);
+    }
 
-//Creates the graph data structure out of the json data
-function buildSVGGraph(graph) {
-    force.nodes(graph.nodes)
-        .links(graph.links)
+    //Creates the graph data structure out of the json data
+    function buildSVGGraph(graph) {
+        force.nodes(graph.nodes)
+            .links(graph.links)
 
-    graph.nodes.forEach(function (n) {
-        node.attr("cx", function (d) {
-            if (d.id == n.id) {
-                n.x = d.x;
-            }
-            return d.x
-        }).attr("cy", function (d) {
-            if (d.id == n.id) {
-                n.y = d.y;
-            }
+        graph.nodes.forEach(function (n) {
+            node.attr("cx", function (d) {
+                if (d.id == n.id) {
+                    n.x = d.x;
+                }
+                return d.x
+            }).attr("cy", function (d) {
+                if (d.id == n.id) {
+                    n.y = d.y;
+                }
                 return d.y;
             });
-    })
+        })
 
-    graph.links.forEach(function (l) {
-        link.attr("x1", function (d) {
-            if (d.source.index == l.source.index) {
-                l.source.x = d.source.x
+        graph.links.forEach(function (l) {
+            link.attr("x1", function (d) {
+                if (d.source.index == l.source.index) {
+                    l.source.x = d.source.x
+                }
+                return d.source.x;
+            })
+                .attr("y1", function (d) {
+                    if (d.source.index == l.source.index) {
+                        l.source.y = d.source.y
+                    }
+                    return d.source.y;
+                })
+                .attr("x2", function (d) {
+                    if (d.target.index == l.target.index) {
+                        l.source.x = d.source.x
+                    }
+                    return d.target.x;
+                })
+                .attr("y2", function (d) {
+                    if (d.target.index == l.target.index) {
+                        l.source.y = d.source.y
+                    }
+                    return d.target.y;
+                });
+        })
+
+        svg.selectAll(".node").remove()
+        svg.selectAll(".link").remove()
+
+        link = svg.selectAll(".link")
+        node = svg.selectAll(".node")
+
+        link = link.data(force.links())
+        link.enter().append("line")
+            .attr("class", "link")
+            .style("stroke-width", function (d) {
+                return Math.sqrt(d.value);
+            });
+
+
+        node = node.data(graph.nodes)
+        node.enter().append("g")
+            .attr("class", "node")
+            .call(drag)
+            .on('click', highlightNode);
+
+        node.append("circle")
+            .attr("r", nodeRadius)
+            .style("fill", function (d) {
+                return color(d.group);
+            });
+
+        node.append("text")
+            .attr("dx", nodeRadius + 4)
+            .attr("dy", 10)
+            .text(function(d) { return d.id })
+            .style("stroke", "black");
+
+        force.start()
+    }
+
+    function buildLinkedIndex(graph) {
+        for (i = 0; i < graph.nodes.length; i++) {
+            linkedByIndex[i + "," + i] = 1;
+        };
+        graph.links.forEach(function (d) {
+            linkedByIndex[d.source.index + "," + d.target.index] = 1;
+            linkedByIndex[d.target.index + "," + d.source.index] = 1;
+        });
+    }
+
+    function collide(alpha) {
+        return function(d) {
+            var padding = 120
+            var rb = 2*nodeRadius + padding,
+                nx1 = d.x - rb,
+                nx2 = d.x + rb,
+                ny1 = d.y - rb,
+                ny2 = d.y + rb;
+            quadtree.visit(function(quad, x1, y1, x2, y2) {
+                if (quad.point && (quad.point !== d)) {
+                    var x = d.x - quad.point.x,
+                        y = d.y - quad.point.y,
+                        l = Math.sqrt(x * x + y * y);
+                    if (l < rb) {
+                        l = (l - rb) / l * alpha;
+                        x *= l;
+                        y *= l;
+                        if (d.id != "Me") {
+                            d.x -= x;
+                            d.y -= y;
+                        }
+                        if (quad.point.id != "Me") {
+                            quad.point.x += x;
+                            quad.point.y += y;
+                        }
+                    }
+                }
+                return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+            });
+        };
+    }
+
+    function highlightNode() {
+        d = d3.select(this).node().__data__;
+        panelUpdate(d.group);
+    }
+
+    //This function looks up whether a pair are neighbors
+    function neighboring(a, b) {
+        return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index];
+    }
+
+    function tick() {
+        node.attr("id", function (d) {
+            if (d.id == "Me") {
+                d.fixed = true;
+                d.x = width/2;
+                d.y = height/2;
             }
+        });
+
+        link.attr("x1", function (d) {
             return d.source.x;
         })
             .attr("y1", function (d) {
-                if (d.source.index == l.source.index) {
-                    l.source.y = d.source.y
-                }
                 return d.source.y;
             })
             .attr("x2", function (d) {
-                if (d.target.index == l.target.index) {
-                    l.source.x = d.source.x
-                }
                 return d.target.x;
             })
             .attr("y2", function (d) {
-                if (d.target.index == l.target.index) {
-                    l.source.y = d.source.y
-                }
                 return d.target.y;
             });
-    })
 
-    svg.selectAll(".node").remove()
-    svg.selectAll(".link").remove()
+        node.attr("cx", function (d) {
+            return d.x;
+        })
+            .attr("cy", function (d) {
+                return d.y;
+            });
 
-    link = svg.selectAll(".link")
-    node = svg.selectAll(".node")
+        node.each(collide(0.5));
 
-    link = link.data(force.links())
-    link.enter().append("line")
-        .attr("class", "link")
-        .style("stroke-width", function (d) {
-            return Math.sqrt(d.value);
-        });
+        d3.selectAll("circle").attr("cx", function (d) {
+            return d.x;
+        })
+            .attr("cy", function (d) {
+                return d.y;
+            });
 
+        d3.selectAll("text").attr("x", function (d) {
+            return d.x;
+        })
+            .attr("y", function (d) {
+                return d.y;
+            });
+    }
 
-    node = node.data(graph.nodes)
-    node.enter().append("g")
-        .attr("class", "node")
-        .call(drag)
-        .on('click', highlightNode);
+    d3.select("body").append("div")
+        .attr("id", "panel")
+        .attr("style", "display:inline-block;vertical-align:top;text-align:center;padding: 1%;width: " + window.innerWidth*0.2 + "px");
 
-    node.append("circle")
-        .attr("r", nodeRadius)
-        .style("fill", function (d) {
-            return color(d.group);
-        });
+    function imageUpload() {
+        var e = document.getElementById("profile_pic_input");
+        e.click();
+    }
 
-    node.append("text")
-        .attr("dx", nodeRadius + 4)
-        .attr("dy", 10)
-        .text(function(d) { return d.id })
-        .style("stroke", "black");
+    function imageTeardown() {
+        var url = "/profile_pic_teardown/";
+        if (confirm("Remove image?")) {
+            var x = new XMLHttpRequest();
+            x.open("POST", url, true);
+            x.onerror = function () { alert("Error, try again");};
+            x.onload = function() {
+                if (x.status == 200) {
+                    location.reload();
+                }
+            };
+            x.send();
+        }
+    }
 
-    force.start()
-}
+    function friendRequest(i) {
+        var xhr = new XMLHttpRequest();
+        var url = "/addfriend/";
+        xhr.open("POST", url, true);
+        var params = "target=" + i;
+        xhr.responseType = 'json';
+        xhr.onload = function () { 
+            if (xhr.status == 200) {
+                var b = document.getElementById("addfriend_button");
+                b.style = "display:none;";
+                curryData()()
+                panelUpdate(xhr.response.id)
+            }};
+        xhr.onerror = function () { alert("Error, try again");};
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.send(params);
+    }
 
-function buildLinkedIndex(graph) {
-    for (i = 0; i < graph.nodes.length; i++) {
-        linkedByIndex[i + "," + i] = 1;
-    };
-    graph.links.forEach(function (d) {
-        linkedByIndex[d.source.index + "," + d.target.index] = 1;
-        linkedByIndex[d.target.index + "," + d.source.index] = 1;
-    });
-}
+    var panel = document.getElementById("panel");
+    panel.innerHTML = "<h3 id='profile_name'></h3>"
+        + "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
+        + '</img>'
+        + '<small class="pelem" id="panelimagehelp"></small>'
+        + '<hr />'
+        + '<small class="pelem" id="panelhelp"></small>'
+        + '<h4 id="profile_color"></h4>'
+        + '<h4 id="profile_age"></h4>'
+        + '<h4 id="profile_gender"></h4>'
+        + '<h4 id="profile_interests"></h4>'
+        + '<h4 id="profile_hometown"></h4>'
+        + '<a href="/editaccount/" class="btn btn-small btn-success pelem" id="edit_profile_button">Edit</a>'
+        + '<button class="btn btn-success pelem" style="display:none;" id="addfriend_button">Add Friend</button>'
+        + '</div>';
 
-function collide(alpha) {
-    return function(d) {
-        var padding = 120
-        var rb = 2*nodeRadius + padding,
-            nx1 = d.x - rb,
-            nx2 = d.x + rb,
-            ny1 = d.y - rb,
-            ny2 = d.y + rb;
-        quadtree.visit(function(quad, x1, y1, x2, y2) {
-            if (quad.point && (quad.point !== d)) {
-                var x = d.x - quad.point.x,
-                    y = d.y - quad.point.y,
-                    l = Math.sqrt(x * x + y * y);
-                if (l < rb) {
-                    l = (l - rb) / l * alpha;
-                    x *= l;
-                    y *= l;
-                    if (d.id != "Me") {
-                        d.x -= x;
-                        d.y -= y;
-                    }
-                    if (quad.point.id != "Me") {
-                        quad.point.x += x;
-                        quad.point.y += y;
-                    }
+    function panelUpdate(i) {
+        var xhr = new XMLHttpRequest();
+        var url = "/user/" + i;
+        xhr.open("GET", url, true);
+        xhr.onload = function() {
+            var data = JSON.parse(xhr.responseText);
+            var pname = document.getElementById("profile_name");
+            var pcolor = document.getElementById("profile_color");
+            var page = document.getElementById("profile_age");
+            var pgender = document.getElementById("profile_gender");
+            var pimg = document.getElementById("profile_image");
+            var pinterests = document.getElementById("profile_interests");
+            var phometown = document.getElementById("profile_hometown");
+            var pbutton = document.getElementById("addfriend_button");
+            var pedit = document.getElementById("edit_profile_button");
+            var phelp = document.getElementById("panelhelp");
+            var pimghelp = document.getElementById("panelimagehelp");
+            pname.innerText = data["name"];
+            pcolor.innerText = "Favorite Color: " + data["color"];
+            page.innerText = "Age: " + data["age"];
+            pgender.innerText = "Gender: " + data["gender"];
+            pinterests.innerText = "Interests: " + data["interests"];
+            phometown.innerText = "Hometown: " + data["hometown"];
+            pimghelp.innerText = "";
+            if (data["image"] == "none") {
+                pimg.src = "/static/images/none.png";
+                if (i == "{{ id }}") {
+                    pimg.onclick = function() { imageUpload(); };
+                    //pimghelp.innerText = "Click to add a profile image!";
+                }
+                else {
+                    pimg.onclick = function() {};
                 }
             }
-            return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
-        });
-    };
-}
+            else if (i != "{{ id }}" && data["image"] == "hidden") {
+                pimg.src = "/static/images/hidden.png";
+                pimg.onclick = function() {};
+            }
+            else {
+                pimg.src = "/pic/" + data["image"];
+                if (i == "{{ id }}") {
+                    //pimg.onclick = function() { imageTeardown(); };
+                    //pimghelp.innerText = "Click to remove your profile image.";
+                }
+                else {
+                    pimg.onclick = function() {};
+                }
+            }
+            if (data["name"] == "{{ name }}") {
+                phelp.innerText = "Hover with your mouse to see who can see your data!";
+                pimg.onmouseover = function() {highlightSettings("image");};
+                pimg.onmouseout = function() {unhighlightSettings("image");};
+                page.onmouseover = function() {highlightSettings("age");};
+                page.onmouseout = function() {unhighlightSettings("age");};
+                pcolor.onmouseover = function() {highlightSettings("color");};
+                pcolor.onmouseout = function() {unhighlightSettings("color");};
+                pgender.onmouseover = function() {highlightSettings("gender");};
+                pgender.onmouseout = function() {unhighlightSettings("gender");};
+                pinterests.onmouseover = function() {highlightSettings("interests");};
+                pinterests.onmouseout = function() {unhighlightSettings("interests");};
+                phometown.onmouseover = function() {highlightSettings("hometown");};
+                phometown.onmouseout = function() {unhighlightSettings("hometown");};
+            }
+            else {
+                phelp.innerText = "";
+                pimg.onmouseover = function() {};
+                pimg.onmouseout = function() {};
+                page.onmouseover = function() {};
+                page.onmouseout = function() {};
+                pcolor.onmouseover = function() {};
+                pcolor.onmouseout = function() {};
+                pgender.onmouseover = function() {};
+                pgender.onmouseout = function() {};
+                pinterests.onmouseover = function() {};
+                pinterests.onmouseout = function() {};
+                phometown.onmouseover = function() {};
+                phometown.onmouseout = function() {};
+            }
+            if (i != "{{ id }}") {
+                pedit.style = "display:none;";
+                if (linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
+                    if (data["requested"] == 2) {
+                        pbutton.onclick = function () {};
+                        pbutton.style = "display:inline-block;"
+                        pbutton.className = "btn btn-info";
+                        pbutton.disabled = "disabled";
+                        pbutton.innerText = "Friend Request Pending...";
+                    }
+                    else if (data["requested"] == 1) {
+                        pbutton.onclick = function () {};
+                        pbutton.style = "display:inline-block;"
+                        pbutton.className = "btn btn-success";
+                        pbutton.innerText = "Accept Friend Request";
+                        pbutton.removeAttribute("disabled");
+                        pbutton.onclick = function() { friendRequest(i) };
+                    }
+                    else {
+                        pbutton.style = "display:inline-block;"; 
+                        pbutton.className = "btn btn-info";
+                        pbutton.innerText = "Add Friend";
+                        pbutton.removeAttribute("disabled");
+                        pbutton.onclick = function() { friendRequest(i) };
+                    }
+                }
+                else {
+                    pbutton.onclick = function() {};
+                    pbutton.style = "display:none;"; 
+                }
+            }
+            else {
+                pedit.style = "display:inline-block;";
+                pbutton.style = "display:none;"
+            }
+        };
+        xhr.onerror = function() { console.log("Error in panel update XHR");};
+        xhr.send(null);
+    }
 
-function highlightNode() {
-    d = d3.select(this).node().__data__;
-    panelUpdate(d.group);
-}
-
-//This function looks up whether a pair are neighbors
-function neighboring(a, b) {
-    return linkedByIndex[a.index + "," + b.index] || linkedByIndex[b.index + "," + a.index];
-}
-
-function tick() {
-    node.attr("id", function (d) {
-        if (d.id == "Me") {
-            d.fixed = true;
-            d.x = width/2;
-            d.y = height/2;
+    function highlightSettings(category) {
+        var e = document.getElementById("profile_" + category);
+        if (category != "image") {
+            e.style = "font-weight: bold;";
         }
-    });
-
-    link.attr("x1", function (d) {
-        return d.source.x;
-    })
-        .attr("y1", function (d) {
-            return d.source.y;
-        })
-        .attr("x2", function (d) {
-            return d.target.x;
-        })
-        .attr("y2", function (d) {
-            return d.target.y;
-        });
-
-    node.attr("cx", function (d) {
-        return d.x;
-    })
-        .attr("cy", function (d) {
-            return d.y;
-        });
-
-    node.each(collide(0.5));
-
-    d3.selectAll("circle").attr("cx", function (d) {
-        return d.x;
-    })
-        .attr("cy", function (d) {
-            return d.y;
-        });
-
-    d3.selectAll("text").attr("x", function (d) {
-        return d.x;
-    })
-        .attr("y", function (d) {
-            return d.y;
-        });
-}
-
-d3.select("body").append("div")
-    .attr("id", "panel")
-    .attr("style", "display:inline-block;vertical-align:top;text-align:center;padding: 1%;width: " + window.innerWidth*0.2 + "px");
-
-function imageUpload() {
-    var e = document.getElementById("profile_pic_input");
-    e.click();
-}
-
-function imageTeardown() {
-    var url = "/profile_pic_teardown/";
-    if (confirm("Remove image?")) {
-        var x = new XMLHttpRequest();
-        x.open("POST", url, true);
-        x.onerror = function () { alert("Error, try again");};
-        x.onload = function() {
-                    if (x.status == 200) {
-                        location.reload();
-                    }
-                   };
-        x.send();
-    }
-}
-
-function friendRequest(i) {
-    var xhr = new XMLHttpRequest();
-    var url = "/addfriend/";
-    xhr.open("POST", url, true);
-    var params = "target=" + i;
-    xhr.responseType = 'json';
-    xhr.onload = function () { 
-                    if (xhr.status == 200) {
-                        var b = document.getElementById("addfriend_button");
-                        b.style = "display:none;";
-                        curryData()()
-                        panelUpdate(xhr.response.id)
-                    }};
-    xhr.onerror = function () { alert("Error, try again");};
-    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhr.send(params);
-}
-
-var panel = document.getElementById("panel");
-panel.innerHTML = "<h3 id='profile_name'></h3>"
-+ "<img id='profile_image' src='' style='max-width:80%;max-height:256px;height:auto;width=auto'>"
-+ '</img>'
-+ '<small class="pelem" id="panelimagehelp"></small>'
-+ '<hr />'
-+ '<small class="pelem" id="panelhelp"></small>'
-+ '<h4 id="profile_color"></h4>'
-+ '<h4 id="profile_age"></h4>'
-+ '<h4 id="profile_gender"></h4>'
-+ '<h4 id="profile_interests"></h4>'
-+ '<h4 id="profile_hometown"></h4>'
-+ '<a href="/editaccount/" class="btn btn-small btn-success pelem" id="edit_profile_button">Edit</a>'
-+ '<button class="btn btn-success pelem" style="display:none;" id="addfriend_button">Add Friend</button>'
-+ '</div>';
-
-function panelUpdate(i) {
-    var xhr = new XMLHttpRequest();
-    var url = "/user/" + i;
-    xhr.open("GET", url, true);
-    xhr.onload = function() {
-                    var data = JSON.parse(xhr.responseText);
-                    var pname = document.getElementById("profile_name");
-                    var pcolor = document.getElementById("profile_color");
-                    var page = document.getElementById("profile_age");
-                    var pgender = document.getElementById("profile_gender");
-                    var pimg = document.getElementById("profile_image");
-                    var pinterests = document.getElementById("profile_interests");
-                    var phometown = document.getElementById("profile_hometown");
-                    var pbutton = document.getElementById("addfriend_button");
-                    var pedit = document.getElementById("edit_profile_button");
-                    var phelp = document.getElementById("panelhelp");
-                    var pimghelp = document.getElementById("panelimagehelp");
-                    pname.innerText = data["name"];
-                    pcolor.innerText = "Favorite Color: " + data["color"];
-                    page.innerText = "Age: " + data["age"];
-                    pgender.innerText = "Gender: " + data["gender"];
-                    pinterests.innerText = "Interests: " + data["interests"];
-                    phometown.innerText = "Hometown: " + data["hometown"];
-                    pimghelp.innerText = "";
-                    if (data["image"] == "none") {
-                        pimg.src = "/static/images/none.png";
-                        if (i == "{{ id }}") {
-                            pimg.onclick = function() { imageUpload(); };
-                            //pimghelp.innerText = "Click to add a profile image!";
-                        }
-                        else {
-                            pimg.onclick = function() {};
-                        }
-                    }
-                    else if (i != "{{ id }}" && data["image"] == "hidden") {
-                        pimg.src = "/static/images/hidden.png";
-                        pimg.onclick = function() {};
-                    }
-                    else {
-                        pimg.src = "/pic/" + data["image"];
-                        if (i == "{{ id }}") {
-                            //pimg.onclick = function() { imageTeardown(); };
-                            //pimghelp.innerText = "Click to remove your profile image.";
-                        }
-                        else {
-                            pimg.onclick = function() {};
-                        }
-                    }
-                    if (data["name"] == "{{ name }}") {
-                        phelp.innerText = "Hover with your mouse to see who can see your data!";
-                        pimg.onmouseover = function() {highlightSettings("image");};
-                        pimg.onmouseout = function() {unhighlightSettings("image");};
-                        page.onmouseover = function() {highlightSettings("age");};
-                        page.onmouseout = function() {unhighlightSettings("age");};
-                        pcolor.onmouseover = function() {highlightSettings("color");};
-                        pcolor.onmouseout = function() {unhighlightSettings("color");};
-                        pgender.onmouseover = function() {highlightSettings("gender");};
-                        pgender.onmouseout = function() {unhighlightSettings("gender");};
-                        pinterests.onmouseover = function() {highlightSettings("interests");};
-                        pinterests.onmouseout = function() {unhighlightSettings("interests");};
-                        phometown.onmouseover = function() {highlightSettings("hometown");};
-                        phometown.onmouseout = function() {unhighlightSettings("hometown");};
-                    }
-                    else {
-                        phelp.innerText = "";
-                        pimg.onmouseover = function() {};
-                        pimg.onmouseout = function() {};
-                        page.onmouseover = function() {};
-                        page.onmouseout = function() {};
-                        pcolor.onmouseover = function() {};
-                        pcolor.onmouseout = function() {};
-                        pgender.onmouseover = function() {};
-                        pgender.onmouseout = function() {};
-                        pinterests.onmouseover = function() {};
-                        pinterests.onmouseout = function() {};
-                        phometown.onmouseover = function() {};
-                        phometown.onmouseout = function() {};
-                    }
-                    if (i != "{{ id }}") {
-                        pedit.style = "display:none;";
-                        if (linkedByIndex["{{ id-1 }}" + "," + (i-1)] != 1) {
-                            if (data["requested"] == 2) {
-                                pbutton.onclick = function () {};
-                                pbutton.style = "display:inline-block;"
-                                pbutton.className = "btn btn-info";
-                                pbutton.disabled = "disabled";
-                                pbutton.innerText = "Friend Request Pending...";
-                            }
-                            else if (data["requested"] == 1) {
-                                pbutton.onclick = function () {};
-                                pbutton.style = "display:inline-block;"
-                                pbutton.className = "btn btn-success";
-                                pbutton.innerText = "Accept Friend Request";
-                                pbutton.removeAttribute("disabled");
-                                pbutton.onclick = function() { friendRequest(i) };
-                            }
-                            else {
-                                pbutton.style = "display:inline-block;"; 
-                                pbutton.className = "btn btn-info";
-                                pbutton.innerText = "Add Friend";
-                                pbutton.removeAttribute("disabled");
-                                pbutton.onclick = function() { friendRequest(i) };
-                            }
-                        }
-                        else {
-                            pbutton.onclick = function() {};
-                            pbutton.style = "display:none;"; 
-                        }
-                    }
-                    else {
-                        pedit.style = "display:inline-block;";
-                        pbutton.style = "display:none;"
-                    }
-                };
-    xhr.onerror = function() { console.log("Error in panel update XHR");};
-    xhr.send(null);
-}
-
-function highlightSettings(category) {
-    var e = document.getElementById("profile_" + category);
-    if (category != "image") {
-        e.style = "font-weight: bold;";
-    }
-    var perm = perms[category];
-    if (perm == "0") { // only friends
-        var myself = d3.selectAll(".node").data().filter(
+        var perm = perms[category];
+        if (perm == "0") { // only friends
+            var myself = d3.selectAll(".node").data().filter(
                 function(o) {return o.id == "Me"})[0];
 
-        var brightgreen = "#39FF14";
-        d3.selectAll("circle").filter(
+            var brightgreen = "#39FF14";
+            d3.selectAll("circle").filter(
                 function(d) {
                     return neighboring(myself, d) || neighboring(d, myself);})
-            .style("stroke", brightgreen)
-            .style("stroke-opacity", "0.75")
-            .style("stroke-width", "64px");
-    }
-    else if (perm == "1") { // FoF
-        var myself = d3.selectAll(".node").data().filter(
+                .style("stroke", brightgreen)
+                .style("stroke-opacity", "0.75")
+                .style("stroke-width", "64px");
+        }
+        else if (perm == "1") { // FoF
+            var myself = d3.selectAll(".node").data().filter(
                 function(o) {return o.id == "Me"})[0];
 
-        var nodes = d3.selectAll(".node").data();
-        var friends = [];
-        for (var i = 0; i < nodes.length; i++) {
-            if (neighboring(nodes[i], myself) || neighboring(myself, nodes[i])) {
-                friends.push(nodes[i]); 
-            }
-        }
-
-        d3.selectAll("circle").filter(
-            function(d) {
-                if (neighboring(myself, d) || neighboring(d, myself)) {
-                    return true;
+            var nodes = d3.selectAll(".node").data();
+            var friends = [];
+            for (var i = 0; i < nodes.length; i++) {
+                if (neighboring(nodes[i], myself) || neighboring(myself, nodes[i])) {
+                    friends.push(nodes[i]); 
                 }
-                for (var i = 0; i < friends.length; i++) {
-                    if (neighboring(d, friends[i]) || neighboring(friends[i], d)) {
+            }
+
+            d3.selectAll("circle").filter(
+                function(d) {
+                    if (neighboring(myself, d) || neighboring(d, myself)) {
                         return true;
                     }
-                }
-                return false;
-            })
-            .style("stroke", "yellow")
-            .style("stroke-opacity", "0.75")
-            .style("stroke-width", "64px");
-    }
-    else if (perm == "2") { // Everyone
-        d3.selectAll("circle").style("stroke-width", '64px');
-        d3.selectAll("circle").style("stroke-opacity", '0.75');
-        var brightorange = "#FFB347";
-        d3.selectAll("circle").style("stroke", brightorange);
-    }
-    else {
+                    for (var i = 0; i < friends.length; i++) {
+                        if (neighboring(d, friends[i]) || neighboring(friends[i], d)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+                .style("stroke", "yellow")
+                .style("stroke-opacity", "0.75")
+                .style("stroke-width", "64px");
+        }
+        else if (perm == "2") { // Everyone
+            d3.selectAll("circle").style("stroke-width", '64px');
+            d3.selectAll("circle").style("stroke-opacity", '0.75');
+            var brightorange = "#FFB347";
+            d3.selectAll("circle").style("stroke", brightorange);
+        }
+        else {
 
+        }
     }
-}
 
-function unhighlightSettings(category) {
-    var e = document.getElementById("profile_" + category);
-    if (category != "image") {
-        e.style = "";
+    function unhighlightSettings(category) {
+        var e = document.getElementById("profile_" + category);
+        if (category != "image") {
+            e.style = "";
+        }
+        d3.selectAll("circle").style("stroke-width", '2px');
+        d3.selectAll("circle").style("stroke", 'black');
     }
-    d3.selectAll("circle").style("stroke-width", '2px');
-    d3.selectAll("circle").style("stroke", 'black');
-}
 
 
-function highlightSettingsBottom(perm, category) {
-    if (perm == "0") { // only friends
-        var myself = d3.selectAll(".node").data().filter(
+    function highlightSettingsBottom(perm, category) {
+        if (perm == "0") { // only friends
+            var myself = d3.selectAll(".node").data().filter(
                 function(o) {return o.id == "Me"})[0];
 
-        var brightgreen = "#39FF14";
-        d3.selectAll("circle").filter(
+            var brightgreen = "#39FF14";
+            d3.selectAll("circle").filter(
                 function(d) {
                     return neighboring(myself, d) || neighboring(d, myself);})
-            .style("stroke", brightgreen)
-            .style("stroke-opacity", "0.75")
-            .style("stroke-width", "64px");
-    }
-    else if (perm == "1") { // FoF
-        var myself = d3.selectAll(".node").data().filter(
+                .style("stroke", brightgreen)
+                .style("stroke-opacity", "0.75")
+                .style("stroke-width", "64px");
+        }
+        else if (perm == "1") { // FoF
+            var myself = d3.selectAll(".node").data().filter(
                 function(o) {return o.id == "Me"})[0];
 
-        var nodes = d3.selectAll(".node").data();
-        var friends = [];
-        for (var i = 0; i < nodes.length; i++) {
-            if (neighboring(nodes[i], myself) || neighboring(myself, nodes[i])) {
-                friends.push(nodes[i]); 
+            var nodes = d3.selectAll(".node").data();
+            var friends = [];
+            for (var i = 0; i < nodes.length; i++) {
+                if (neighboring(nodes[i], myself) || neighboring(myself, nodes[i])) {
+                    friends.push(nodes[i]); 
+                }
+            }
+
+            d3.selectAll("circle").filter(
+                function(d) {
+                    if (neighboring(myself, d) || neighboring(d, myself)) {
+                        return true;
+                    }
+                    for (var i = 0; i < friends.length; i++) {
+                        if (neighboring(d, friends[i]) || neighboring(friends[i], d)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+                .style("stroke", 'yellow')
+                .style("stroke-opacity", "0.75")
+                .style("stroke-width", "64px");
+        }
+        else if (perm == "2") { // Everyone
+            d3.selectAll("circle").style("stroke-width", '64px');
+            d3.selectAll("circle").style("stroke-opacity", '0.75');
+            var brightorange = "#FFB347";
+            d3.selectAll("circle").style("stroke", brightorange);
+        }
+        else {
+
+        }
+    }
+
+    function unhighlightSettingsBottom() {
+        d3.selectAll("circle").style("stroke-width", '2px');
+        d3.selectAll("circle").style("stroke", 'black');
+    }
+
+    panelUpdate({{ viewing }});
+
+    function controlChange() {
+        var xhr = new XMLHttpRequest();
+        var url = "/control_change/";
+        var params = "control=";
+        xhr.open("POST", url, true);
+        xhr.onload = function () {
+            if (xhr.status == 200) {
+                curryPermData()()
+            }
+        };
+        var image = document.getElementById("image");
+        for (c in image.children) {
+            if (image[c] && image[c].checked == true) {
+                params += image[c].value;
             }
         }
 
-        d3.selectAll("circle").filter(
-            function(d) {
-                if (neighboring(myself, d) || neighboring(d, myself)) {
-                    return true;
-                }
-                for (var i = 0; i < friends.length; i++) {
-                    if (neighboring(d, friends[i]) || neighboring(friends[i], d)) {
-                        return true;
-                    }
-                }
-                return false;
-            })
-            .style("stroke", 'yellow')
-            .style("stroke-opacity", "0.75")
-            .style("stroke-width", "64px");
-    }
-    else if (perm == "2") { // Everyone
-        d3.selectAll("circle").style("stroke-width", '64px');
-        d3.selectAll("circle").style("stroke-opacity", '0.75');
-        var brightorange = "#FFB347";
-        d3.selectAll("circle").style("stroke", brightorange);
-    }
-    else {
-
-    }
-}
-
-function unhighlightSettingsBottom() {
-    d3.selectAll("circle").style("stroke-width", '2px');
-    d3.selectAll("circle").style("stroke", 'black');
-}
-
-panelUpdate({{ viewing }});
-
-function controlChange() {
-    var xhr = new XMLHttpRequest();
-    var url = "/control_change/";
-    var params = "control=";
-    xhr.open("POST", url, true);
-    xhr.onload = function () {
-                    if (xhr.status == 200) {
-                        curryPermData()()
-                    }
-                   };
-    var image = document.getElementById("image");
-    for (c in image.children) {
-        if (image[c] && image[c].checked == true) {
-            params += image[c].value;
+        var color = document.getElementById("color");
+        for (c in color.children) {
+            if (color[c] && color[c].checked == true) {
+                params += ";";
+                params += color[c].value;
+            }
         }
-    }
 
-    var color = document.getElementById("color");
-    for (c in color.children) {
-        if (color[c] && color[c].checked == true) {
-            params += ";";
-            params += color[c].value;
+        var age = document.getElementById("age");
+        for (c in age.children) {
+            if (age[c] && age[c].checked) {
+                params += ";";
+                params += age[c].value;
+            }
         }
-    }
 
-    var age = document.getElementById("age");
-    for (c in age.children) {
-        if (age[c] && age[c].checked) {
-            params += ";";
-            params += age[c].value;
+        var gender = document.getElementById("gender");
+        for (c in gender.children) {
+            if (gender[c] && gender[c].checked) {
+                params += ";";
+                params += gender[c].value;
+            }
         }
-    }
 
-    var gender = document.getElementById("gender");
-    for (c in gender.children) {
-        if (gender[c] && gender[c].checked) {
-            params += ";";
-            params += gender[c].value;
+        var interests = document.getElementById("interests");
+        for (c in interests.children) {
+            if (interests[c] && interests[c].checked) {
+                params += ";";
+                params += interests[c].value;
+            }
         }
-    }
 
-    var interests = document.getElementById("interests");
-    for (c in interests.children) {
-        if (interests[c] && interests[c].checked) {
-            params += ";";
-            params += interests[c].value;
+        var hometown = document.getElementById("hometown");
+        for (c in hometown.children) {
+            if (hometown[c] && hometown[c].checked) {
+                params += ";";
+                params += hometown[c].value;
+            }
         }
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.send(params);
     }
 
-    var hometown = document.getElementById("hometown");
-    for (c in hometown.children) {
-        if (hometown[c] && hometown[c].checked) {
-            params += ";";
-            params += hometown[c].value;
-        }
-    }
-    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhr.send(params);
-}
+    d3.select("body").append("div")
+        .attr("id", "bottom")
+        .attr("style", "display:inline-block;vertical-align:bottom;padding-left: 1%;width: " + window.innerWidth + "px;height: " + window.innerHeight*0.18 + "px;");
 
-d3.select("body").append("div")
-    .attr("id", "bottom")
-    .attr("style", "display:inline-block;vertical-align:bottom;padding-left: 1%;width: " + window.innerWidth + "px;height: " + window.innerHeight*0.18 + "px;");
-
-var bottom = document.getElementById("bottom");
-bottom.innerHTML = "<h4>Who can see:</h4>"
-                    + '<div style="width: 100%; overflow: hidden;">'
-                    + '<div style="float: left;">'
-                    + "<h4>Image</h4>"
-                    + '<form id="image">'
-                        + '<label id="bottom_image_0"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(0,"image")'
-                        + ' onmouseout=unhighlightSettingsBottom()'
-                        + '><input type="radio"'
-                        + ' name="image" value="friends"'
-                        {% if perms["image"] == 0 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends</label><br>'
-                        + '<label id="bottom_image_1"'
-                        + ' onclick=controlChange()' 
-                        + ' onmouseover=highlightSettingsBottom(1,"image")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="image" value="fof"'
-                        {% if perms["image"] == 1 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends of Friends</label><br>'
-                        + '<label id="bottom_image_2"'
-                        + ' onclick=controlChange()' 
-                        + ' onmouseover=highlightSettingsBottom(2,"image")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="image" value="everyone"'
-                        {% if perms["image"] == 2 %}
-                            + ' checked'
-                        {% endif %}
-                    + '>Everyone</label>'
-                    + '</form>'
-                    + '</div>'
-                    + '<div style="float: left; margin-left: 5%;">'
-                    + "<h4>Favorite Color</h4>"
-                    + '<form id="color">'
-                        + '<label id="bottom_color_0"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(0,"color")'
-                        + ' onmouseout=unhighlightSettingsBottom()'
-                        + '><input type="radio"'
-                        + ' name="fav_color" value="friends"'
-                        {% if perms["color"] == 0 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends</label><br>'
-                        + '<label id="bottom_color_1"'
-                        + ' onclick=controlChange()' 
-                        + ' onmouseover=highlightSettingsBottom(1,"color")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="fav_color" value="fof"'
-                        {% if perms["color"] == 1 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends of Friends</label><br>'
-                        + '<label id="bottom_color_2"'
-                        + ' onclick=controlChange()' 
-                        + ' onmouseover=highlightSettingsBottom(2,"color")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="fav_color" value="everyone"'
-                        {% if perms["color"] == 2 %}
-                            + ' checked'
-                        {% endif %}
-                    + '>Everyone</label>'
-                    + '</form>'
-                    + '</div>'
-                    + '<div style="float:left; margin-left: 5%;">'
-                    + "<h4>Age</h4>"
-                    + '<form id="age">'
-                        + '<label id="bottom_age_0"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(0,"age")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="age" value="friends"'
-                        {% if perms["age"] == 0 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends</label><br>'
-                        + '<label id="bottom_age_1"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(1,"age")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="age" value="fof"'
-                        {% if perms["age"] == 1 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends of Friends</label><br>'
-                        + '<label id="bottom_age_2"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(2,"age")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="age" value="everyone"'
-                        {% if perms["age"] == 2 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Everyone</label>'
-                    + '</form>'
-                    + '</div>'
-                    + '<div style="float:left; margin-left: 5%;">'
-                    + "<h4>Gender</h4>"
-                    + '<form id="gender">'
-                    + '<label id="bottom_gender_0"'
-                    + ' onclick=controlChange()'
-                    + ' onmouseover=highlightSettingsBottom(0,"gender")'
-                    + ' onmouseout=unhighlightSettingsBottom()' 
-                    + '><input type="radio" name="gender" value="friends"'
-                        {% if perms["gender"] == 0 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends</label><br>'
-                        + '<label id="bottom_gender_1"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(1,"gender")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="gender" value="fof"'
-                        {% if perms["gender"] == 1 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends of Friends</label><br>'
-                        + '<label id="bottom_gender_2"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(2,"gender")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="gender" value="everyone"'
-                        {% if perms["gender"] == 2 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Everyone</label>'
-                    + '</form>'
-                    + '</div>'
-                    + '<div style="float:left; margin-left: 5%;">'
-                    + "<h4>Interests</h4>"
-                    + '<form id="interests">'
-                    + '<label id="bottom_interests_0"'
-                    + ' onclick=controlChange()'
-                    + ' onmouseover=highlightSettingsBottom(0,"interests")'
-                    + ' onmouseout=unhighlightSettingsBottom()' 
-                    + '><input type="radio" name="interests" value="friends"'
-                        {% if perms["interests"] == 0 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends</label><br>'
-                        + '<label id="bottom_interests_1"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(1,"interests")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="interests" value="fof"'
-                        {% if perms["interests"] == 1 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends of Friends</label><br>'
-                        + '<label id="bottom_interests_2"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(2,"interests")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="interests" value="everyone"'
-                        {% if perms["interests"] == 2 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Everyone</label>'
-                    + '</form>'
-                    + '</div>'
-                    + '<div style="float:left; margin-left: 5%;">'
-                    + "<h4>Hometown</h4>"
-                    + '<form id="hometown">'
-                    + '<label id="bottom_hometown_0"'
-                    + ' onclick=controlChange()'
-                    + ' onmouseover=highlightSettingsBottom(0,"hometown")'
-                    + ' onmouseout=unhighlightSettingsBottom()' 
-                    + '><input type="radio" name="hometown" value="friends"'
-                        {% if perms["hometown"] == 0 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends</label><br>'
-                        + '<label id="bottom_hometown_1"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(1,"hometown")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="hometown" value="fof"'
-                        {% if perms["hometown"] == 1 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Friends of Friends</label><br>'
-                        + '<label id="bottom_hometown_2"'
-                        + ' onclick=controlChange()'
-                        + ' onmouseover=highlightSettingsBottom(2,"hometown")'
-                        + ' onmouseout=unhighlightSettingsBottom()' 
-                        + '><input type="radio" name="hometown" value="everyone"'
-                        {% if perms["hometown"] == 2 %}
-                            + ' checked'
-                        {% endif %}
-                        + '>Everyone</label>'
-                    + '</form>'
-                    + '</div>'
-                    + '</div>'
-                        ;
+    var bottom = document.getElementById("bottom");
+    bottom.innerHTML = "<h4>Who can see:</h4>"
+        + '<div style="width: 100%; overflow: hidden;">'
+        + '<div style="float: left;">'
+        + "<h4>Image</h4>"
+        + '<form id="image">'
+        + '<label id="bottom_image_0"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(0,"image")'
+        + ' onmouseout=unhighlightSettingsBottom()'
+        + '><input type="radio"'
+        + ' name="image" value="friends"'
+    {% if perms["image"] == 0 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends</label><br>'
+        + '<label id="bottom_image_1"'
+        + ' onclick=controlChange()' 
+        + ' onmouseover=highlightSettingsBottom(1,"image")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="image" value="fof"'
+    {% if perms["image"] == 1 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends of Friends</label><br>'
+        + '<label id="bottom_image_2"'
+        + ' onclick=controlChange()' 
+        + ' onmouseover=highlightSettingsBottom(2,"image")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="image" value="everyone"'
+    {% if perms["image"] == 2 %}
+        + ' checked'
+    {% endif %}
+        + '>Everyone</label>'
+        + '</form>'
+        + '</div>'
+        + '<div style="float: left; margin-left: 5%;">'
+        + "<h4>Favorite Color</h4>"
+        + '<form id="color">'
+        + '<label id="bottom_color_0"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(0,"color")'
+        + ' onmouseout=unhighlightSettingsBottom()'
+        + '><input type="radio"'
+        + ' name="fav_color" value="friends"'
+    {% if perms["color"] == 0 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends</label><br>'
+        + '<label id="bottom_color_1"'
+        + ' onclick=controlChange()' 
+        + ' onmouseover=highlightSettingsBottom(1,"color")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="fav_color" value="fof"'
+    {% if perms["color"] == 1 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends of Friends</label><br>'
+        + '<label id="bottom_color_2"'
+        + ' onclick=controlChange()' 
+        + ' onmouseover=highlightSettingsBottom(2,"color")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="fav_color" value="everyone"'
+    {% if perms["color"] == 2 %}
+        + ' checked'
+    {% endif %}
+        + '>Everyone</label>'
+        + '</form>'
+        + '</div>'
+        + '<div style="float:left; margin-left: 5%;">'
+        + "<h4>Age</h4>"
+        + '<form id="age">'
+        + '<label id="bottom_age_0"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(0,"age")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="age" value="friends"'
+    {% if perms["age"] == 0 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends</label><br>'
+        + '<label id="bottom_age_1"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(1,"age")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="age" value="fof"'
+    {% if perms["age"] == 1 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends of Friends</label><br>'
+        + '<label id="bottom_age_2"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(2,"age")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="age" value="everyone"'
+    {% if perms["age"] == 2 %}
+        + ' checked'
+    {% endif %}
+        + '>Everyone</label>'
+        + '</form>'
+        + '</div>'
+        + '<div style="float:left; margin-left: 5%;">'
+        + "<h4>Gender</h4>"
+        + '<form id="gender">'
+        + '<label id="bottom_gender_0"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(0,"gender")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="gender" value="friends"'
+    {% if perms["gender"] == 0 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends</label><br>'
+        + '<label id="bottom_gender_1"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(1,"gender")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="gender" value="fof"'
+    {% if perms["gender"] == 1 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends of Friends</label><br>'
+        + '<label id="bottom_gender_2"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(2,"gender")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="gender" value="everyone"'
+    {% if perms["gender"] == 2 %}
+        + ' checked'
+    {% endif %}
+        + '>Everyone</label>'
+        + '</form>'
+        + '</div>'
+        + '<div style="float:left; margin-left: 5%;">'
+        + "<h4>Interests</h4>"
+        + '<form id="interests">'
+        + '<label id="bottom_interests_0"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(0,"interests")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="interests" value="friends"'
+    {% if perms["interests"] == 0 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends</label><br>'
+        + '<label id="bottom_interests_1"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(1,"interests")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="interests" value="fof"'
+    {% if perms["interests"] == 1 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends of Friends</label><br>'
+        + '<label id="bottom_interests_2"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(2,"interests")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="interests" value="everyone"'
+    {% if perms["interests"] == 2 %}
+        + ' checked'
+    {% endif %}
+        + '>Everyone</label>'
+        + '</form>'
+        + '</div>'
+        + '<div style="float:left; margin-left: 5%;">'
+        + "<h4>Hometown</h4>"
+        + '<form id="hometown">'
+        + '<label id="bottom_hometown_0"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(0,"hometown")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="hometown" value="friends"'
+    {% if perms["hometown"] == 0 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends</label><br>'
+        + '<label id="bottom_hometown_1"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(1,"hometown")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="hometown" value="fof"'
+    {% if perms["hometown"] == 1 %}
+        + ' checked'
+    {% endif %}
+        + '>Friends of Friends</label><br>'
+        + '<label id="bottom_hometown_2"'
+        + ' onclick=controlChange()'
+        + ' onmouseover=highlightSettingsBottom(2,"hometown")'
+        + ' onmouseout=unhighlightSettingsBottom()' 
+        + '><input type="radio" name="hometown" value="everyone"'
+    {% if perms["hometown"] == 2 %}
+        + ' checked'
+    {% endif %}
+        + '>Everyone</label>'
+        + '</form>'
+        + '</div>'
+        + '</div>'
+    ;
 
     // Utility for adding event handlers
     var addEvent = function(object, type, callback) {
