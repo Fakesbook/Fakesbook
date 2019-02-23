@@ -40,45 +40,6 @@ label {
 {% endblock %}
 {% block script %}
 <script src="/static/d3.v3.min.js"></script>
-<!--
-<script type="application/json" id="data">
-{
-    "nodes": [
-        {% for user in users %}
-        {% if user[0] == name %}
-        {"id":"Me", "group":"{{ user[1] }}"}
-        {% else %}
-        {"id":"{{ user[0] }}", "group":"{{ user[1] }}"}
-        {% endif %}
-		{% if not loop.last %}
-			,
-		{% endif %}
-        {% endfor %}
-    ],
-    "links": [
-        {% for src,targ in friends %}
-        {"source": {{ src-1 }}, "target": {{ targ-1 }}, "value": 10}
-		{% if not loop.last %}
-			,
-		{% endif %}
-        {% endfor %}
-
-    ]
-}    
-</script>
--->
-<!--
-<script type="application/json" id="perms">
-{
-    "image": "{{ perms['image'] }}",
-    "age": "{{ perms['age'] }}",
-    "gender": "{{ perms['gender'] }}",
-    "color": "{{ perms['color'] }}",
-    "hometown": "{{ perms['hometown'] }}",
-    "interests": "{{ perms['interests'] }}"
-}
--->
-</script>
 <script>
 
     //Constants for the SVG
@@ -142,7 +103,7 @@ var getJSON = function(url, callback) {
 
 function curryData() {
     return function () {
-        getJSON("/graph_data/", function(err, rsp) {
+        getJSON("/all_data/", function(err, rsp) {
             if (err == null) {
 
                 restart(rsp.graph)
@@ -152,6 +113,20 @@ function curryData() {
 
             } else {
                 alert("Unable to get graph data from the server!")
+            }
+        })
+    }
+}
+
+function curryPermData() {
+    return function () {
+        getJSON("/perm_data/", function(err, rsp) {
+            if (err == null) {
+
+                perms = rsp.perms
+
+            } else {
+                alert("Unable to get permissions data from the server!")
             }
         })
     }
@@ -655,7 +630,7 @@ function controlChange() {
     xhr.open("POST", url, true);
     xhr.onload = function () {
                     if (xhr.status == 200) {
-                        curryData()()
+                        curryPermData()()
                     }
                    };
     var image = document.getElementById("image");
@@ -912,18 +887,19 @@ bottom.innerHTML = "<h4>Who can see:</h4>"
                     + '</div>'
                         ;
 
-// Utility for adding event handlers
-var addEvent = function(object, type, callback) {
-    if (object == null || typeof(object) == 'undefined') return;
-    if (object.addEventListener) {
-        object.addEventListener(type, callback, false);
-    } else if (object.attachEvent) {
-        object.attachEvent("on" + type, callback);
-    } else {
-        object["on"+type] = callback;
-    }
-};
+    // Utility for adding event handlers
+    var addEvent = function(object, type, callback) {
+        if (object == null || typeof(object) == 'undefined') return;
+        if (object.addEventListener) {
+            object.addEventListener(type, callback, false);
+        } else if (object.attachEvent) {
+            object.attachEvent("on" + type, callback);
+        } else {
+            object["on"+type] = callback;
+        }
+    };
 
-addEvent(window, "resize", function() {window.location = window.location;});
+    addEvent(window, "resize", function() {window.location = window.location;});
+
 </script>
 {% endblock %}
