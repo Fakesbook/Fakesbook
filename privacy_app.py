@@ -15,7 +15,7 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
 # read the app key from the environment variable
-app.secret_key = b64decode(environ['SECRET_KEY'])
+app.config['SECRET_KEY'] = urandom(32)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PICTURE_DIR'] = PICTURE_DIR
 # 8 megabyte images, at most
