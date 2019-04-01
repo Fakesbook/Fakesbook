@@ -5,9 +5,19 @@ from privacy_app import app
 from twisted.internet import reactor
 from twisted.web.server import Site
 from twisted.web.wsgi import WSGIResource
+from appJar import gui
 
 if __name__ == '__main__':
 
+    appgui = gui()
+
+    appgui.addLabel("title", "Fakesbook")
+    appgui.setLabelBg("title", "red")
+
+    appgui.go()
+
+
+    """
     port = 8080
     debugPort = 8081
 
@@ -17,3 +27,4 @@ if __name__ == '__main__':
         flask_site = WSGIResource(reactor, reactor.getThreadPool(), app)
         reactor.listenTCP(port, Site(flask_site))
         reactor.run()
+        """
