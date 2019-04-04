@@ -1,14 +1,13 @@
-from os import listdir, environ, urandom, path, remove as rm_file
-from hmac import HMAC as hmac, compare_digest 
+from os import listdir, urandom, path, remove as rm_file
 import json
 import bcrypt
 import sqlite3
 from hashlib import sha256
-from base64 import b64encode, b64decode
-from flask import Flask, request, render_template, session, redirect, flash
-from flask import send_from_directory
+from flask import Flask, request, render_template, session, redirect, flash, send_from_directory
 from werkzeug.utils import secure_filename
 from db import get_db, init_app
+
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']),
 
 def allowed_file(filename):
     """ Checks a user image upload for having the correct file extension """
@@ -55,7 +54,6 @@ def create_app():
     app.config.from_mapping(
             UPLOAD_FOLDER = "./db/uploads",
             PICTURE_DIR = "./db/pictures",
-            ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']),
             SECRET_KEY = urandom(32),
             DATABASE = './db/app.db',
             # 8 megabyte images, at most
@@ -153,6 +151,7 @@ def create_app():
         if usernameOk:
             flash("Username already exists! Please choose a new one")
         else:
+            c = get_db().cursor()
             c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""",
                     (username, bcrypt.hashpw(password.encode('utf-8'),
                         bcrypt.gensalt())))
