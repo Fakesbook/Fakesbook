@@ -1,7 +1,7 @@
 from os import environ, urandom
 from sys import argv
 from base64 import b64encode
-from privacy_app import app
+from privacy_app import create_app
 from twisted.internet import tksupport, reactor
 from twisted.web.server import Site
 from twisted.web.wsgi import WSGIResource
@@ -12,6 +12,7 @@ port = 8080
 debugPort = 8081
 
 appgui = gui("Fakesbook", "400x400")
+app = create_app()
 
 # install gui support in twisted
 tksupport.install(appgui.topLevel)
