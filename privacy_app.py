@@ -8,6 +8,7 @@ from base64 import b64encode, b64decode
 from flask import Flask, request, render_template, session, redirect, flash
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
+from db import get_db, init_app
 
 UPLOAD_FOLDER = "./db/uploads"
 PICTURE_DIR = "./db/pictures"
@@ -18,40 +19,14 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = urandom(32)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PICTURE_DIR'] = PICTURE_DIR
+app.config['DATABASE'] = './db/app.db'
 # 8 megabyte images, at most
 app.config['MAX_CONTENT_LENGTH'] =  8 * 1024 * 1024 * 1024
 app.config['DEBUG'] = False
 
 # establish a connection to the database file
-conn = sqlite3.connect('./db/app.db', check_same_thread=False)
-
-# initial database setup
-c = conn.cursor()
-c.execute("""
-   CREATE TABLE IF NOT EXISTS User (
-      id integer primary key autoincrement,
-      username text unique,
-      password text,
-      gender text default null,
-      image text default "none",
-      age integer default null,
-      phone text default null,
-      fav_color text default null,
-      interests text default null,
-      hometown text default null,
-      permissions integer default 222222,
-      requests text default "[]"
-   )""")
-c.execute("""
-   CREATE TABLE IF NOT EXISTS Friend (
-      id integer primary key autoincrement,
-      f1 integer not null,
-      f2 integer not null,
-      foreign key (f1) references User(id),
-      foreign key (f2) references User(id),
-      constraint friendship unique (f1, f2)
-   )""")
-conn.commit()
+with app.app_context():
+    init_app(app)
 
 def allowed_file(filename):
     """ Checks a user image upload for having the correct file extension """
@@ -64,7 +39,7 @@ def selectValue(value, user):
                      "age", "phone", "fav_color", "interests", "hometown", 
                      "requests"]:
         return None
-    c = conn.cursor()
+    c = get_db().cursor()
     return c.execute("""SELECT {v} FROM User WHERE username=? LIMIT 1""".format(v=value),
             (user,)).fetchone()
 
@@ -78,7 +53,7 @@ def graph():
     """ draw the graph SVG. Note this is embedded in a larger page """
     if "username" not in session:
         return redirect('/')
-    c = conn.cursor()
+    c = get_db().cursor()
     users = c.execute("""SELECT username,id,gender,image,phone,
                                 fav_color,age,permissions,interests,hometown
                                 FROM User""").fetchall()
@@ -170,7 +145,7 @@ def register():
         c.execute("""INSERT INTO User(username, password) VALUES (?, ?)""",
                 (username, bcrypt.hashpw(password.encode('utf-8'),
                     bcrypt.gensalt())))
-        conn.commit()
+        get_db().commit()
         session['username'] = username
         return redirect("/accountsetup/")
 
@@ -182,7 +157,7 @@ def editaccount():
     """ editing values for one's own accout """
     if not "username" in session:
         return redirect('/')
-    c = conn.cursor()
+    c = get_db().cursor()
     if request.method == "POST":
         gender = request.form['gender']
         fav_color = request.form['color']
@@ -195,7 +170,7 @@ def editaccount():
                                      WHERE username=?""",
                                     (age,gender,phone,fav_color,
                                      interests,hometown,session['username']))
-        conn.commit()
+        get_db().commit()
         return redirect("/d3/") # cause the XHR response to reload the page
     user = c.execute("""SELECT fav_color, age, gender, interests, hometown, phone
                         FROM User where username=? LIMIT 1""",
@@ -222,13 +197,13 @@ def accountsetup():
         phone = request.form['phone']
         interests = request.form['interests']
         hometown = request.form['hometown'].capitalize()
-        c = conn.cursor()
+        c = get_db().cursor()
         c.execute("""UPDATE User SET age=?,gender=?,phone=?,
                                      fav_color=?,interests=?,hometown=?
                                      WHERE username=?""",
                                     (age,gender,phone,fav_color,interests,
                                      hometown,session['username']))
-        conn.commit()
+        get_db().commit()
         return redirect("/profilepicture/")
     return render_template("createaccount.html", target='/accountsetup/',
             gender="", color="", age="", phone="", interests="", hometown="")
@@ -245,10 +220,10 @@ def setprofilepicture(filename):
     user = session['username']
     if allowed_file(filename):
         fname = secure_filename(filename)
-        c = conn.cursor()
+        c = get_db().cursor()
         c.execute("""UPDATE User SET image=? WHERE username=?""",
                         (fname,user))
-        conn.commit() 
+        get_db().commit() 
     return redirect("/")
 
 @app.route('/addfriend/', methods=["POST"])
@@ -260,7 +235,7 @@ def addfriend():
     targ_id = int(request.values['target'])
     if id == targ_id:
         return "Can't friend yourself", 400
-    c = conn.cursor()
+    c = get_db().cursor()
     ids = set(c.execute("""SELECT id from User""").fetchall())
     if (targ_id,) not in ids:
         return 'User not found', 400
@@ -277,7 +252,7 @@ def addfriend():
         targ_requests.add(id)
         c.execute("""UPDATE User set requests=? where id=?""", 
                  (json.dumps(list(targ_requests)), targ_id))
-    conn.commit()
+    get_db().commit()
     return "Success", 200
 
 @app.route('/logout/')
@@ -291,7 +266,7 @@ def logout():
 
 def ids_are_friends(id1, id2):
     """ given two IDs, return if they're friends """
-    c = conn.cursor()
+    c = get_db().cursor()
     is_friend = c.execute("""SELECT count(*) from Friend where (f1=? and f2=?)
                              or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()[0]
     return is_friend > 0
@@ -305,7 +280,7 @@ def user_info(id):
         id = int(id)
     except:
         return json.dumps({}), 200
-    c = conn.cursor()
+    c = get_db().cursor()
     user = c.execute("""SELECT username, fav_color, age, gender,image, interests, hometown,
                         permissions,requests FROM User where id=? LIMIT 1""",
                         (int(id),)).fetchone()
@@ -386,10 +361,10 @@ def profile_pic_upload():
     if file and allowed_file(file.filename):
         fname = secure_filename(file.filename)
         file.save(path.join(app.config['UPLOAD_FOLDER'], fname))
-        c = conn.cursor()
+        c = get_db().cursor()
         c.execute("""UPDATE User SET image=? WHERE username=?""",
                         (fname,user))
-        conn.commit() 
+        get_db().commit() 
     return redirect("/d3/")
 
 @app.route('/profile_pic_teardown/', methods=['POST'])
@@ -398,14 +373,14 @@ def profile_pic_teardown():
     if 'username' not in session:
         return redirect('/d3/')
     user = session['username']
-    c = conn.cursor()
+    c = get_db().cursor()
     try:
         old_img = selectValue("image", user)[0]
     except IndexError:
         old_img = None
     c.execute("""UPDATE User SET image=? WHERE username=?""",
                         ("none",user))
-    conn.commit()
+    get_db().commit()
     if old_img: # delete the old image - TODO shred
         rm_file(path.join(app.config["UPLOAD_FOLDER"], old_img))
     return redirect('/d3/')
@@ -436,9 +411,9 @@ def control_change():
 
     user = session['username']
 
-    c = conn.cursor()
+    c = get_db().cursor()
     c.execute("""UPDATE User SET permissions=? WHERE username=?""", (permissions,user))
-    conn.commit()
+    get_db().commit()
 
     return "", 200
 
