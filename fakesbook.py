@@ -11,6 +11,11 @@ import socket
 port = 8080
 debugPort = 8081
 
+appgui = gui("Fakesbook", "400x400")
+
+# install gui support in twisted
+tksupport.install(appgui.topLevel)
+
 def getIPAddress():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -23,11 +28,13 @@ def getIPAddress():
     return ip
 
 def launchApp():
+    appgui.setLabel("address", "server is running on: " + getIPAddress() + ":" + str(port))
     flask_site = WSGIResource(reactor, reactor.getThreadPool(), app)
     reactor.listenTCP(port, Site(flask_site))
     reactor.run()
 
 def stopApp():
+    appgui.setLabel("address", "server will run on: " + getIPAddress() + ":" + str(port))
     reactor.stop()
 
 def launchDebug():
@@ -40,15 +47,12 @@ def loadDatabase():
     pass
 
 def buildGUI():
-    appgui = gui("Fakesbook", "400x400")
-
-    tksupport.install(appgui.topLevel)
 
     appgui.addLabel("title", "Fakesbook")
-    appgui.buttons(["Save Database", "Load Database"], [saveDatabase, loadDatabase])
+    appgui.buttons(["Save Database", "Load a Database"], [saveDatabase, loadDatabase])
     appgui.buttons(["Launch", "Stop"], [launchApp, stopApp])
 
-    appgui.addLabel("address", getIPAddress())
+    appgui.addLabel("address", "server will run on: " + getIPAddress() + ":" + str(port))
 
     appgui.go()
 
