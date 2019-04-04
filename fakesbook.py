@@ -1,6 +1,4 @@
-from os import environ, urandom
 from sys import argv
-from base64 import b64encode
 from privacy_app import create_app
 from twisted.internet import tksupport, reactor
 from twisted.web.server import Site
