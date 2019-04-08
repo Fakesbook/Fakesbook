@@ -9,7 +9,7 @@ import socket
 port = 8080
 debugPort = 8081
 
-appgui = gui("Fakesbook", "400x400")
+appgui = gui("Fakesbook", "300x300")
 app = create_app()
 
 # install gui support in twisted
@@ -32,24 +32,13 @@ def launchApp():
     reactor.listenTCP(port, Site(flask_site))
     reactor.run()
 
-def stopApp():
-    appgui.setLabel("address", "server will run on: " + getIPAddress() + ":" + str(port))
-    reactor.stop()
-
 def launchDebug():
     app.run(debug=True, port=debugPort)
-
-def saveDatabase():
-    pass
-
-def loadDatabase():
-    pass
 
 def buildGUI():
 
     appgui.addLabel("title", "Fakesbook")
-    appgui.buttons(["Save Database", "Load a Database"], [saveDatabase, loadDatabase])
-    appgui.buttons(["Launch", "Stop"], [launchApp, stopApp])
+    appgui.buttons(["Launch"], [launchApp])
 
     appgui.addLabel("address", "server will run on: " + getIPAddress() + ":" + str(port))
 
