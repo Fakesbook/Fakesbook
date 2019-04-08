@@ -56,6 +56,7 @@ def create_app():
             PICTURE_DIR = "./db/pictures",
             SECRET_KEY = urandom(32),
             DATABASE = './db/app.db',
+            DB_SCHEMA = './db/schema.sql',
             # 8 megabyte images, at most
             MAX_CONTENT_LENGTH = 8 * 1024 * 1024 * 1024,
             DEBUG = False
