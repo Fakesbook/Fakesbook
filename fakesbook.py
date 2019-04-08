@@ -35,12 +35,19 @@ def launchApp():
 def launchDebug():
     app.run(debug=True, port=debugPort)
 
+def stopServer():
+    if reactor.running:
+        reactor.stop()
+    return True
+
 def buildGUI():
 
     appgui.addLabel("title", "Fakesbook")
     appgui.buttons(["Launch"], [launchApp])
 
     appgui.addLabel("address", "server will run on: " + getIPAddress() + ":" + str(port))
+
+    appgui.setStopFunction(stopServer)
 
     appgui.go()
 
