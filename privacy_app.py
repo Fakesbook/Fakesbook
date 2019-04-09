@@ -6,6 +6,7 @@ from hashlib import sha256
 from flask import Flask, request, render_template, session, redirect, flash, send_from_directory
 from werkzeug.utils import secure_filename
 from db import get_db, init_app
+from config import get_absolute_path
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']),
 
@@ -52,11 +53,11 @@ def create_app():
     app = Flask(__name__)
 
     app.config.from_mapping(
-            UPLOAD_FOLDER = "./db/uploads",
-            PICTURE_DIR = "./db/pictures",
+            UPLOAD_FOLDER = get_absolute_path("db/uploads"),
+            PICTURE_DIR = get_absolute_path("db/pictures"),
             SECRET_KEY = urandom(32),
-            DATABASE = './db/app.db',
-            DB_SCHEMA = './db/schema.sql',
+            DATABASE = get_absolute_path('db/app.db'),
+            DB_SCHEMA = get_absolute_path('db/schema.sql'),
             # 8 megabyte images, at most
             MAX_CONTENT_LENGTH = 8 * 1024 * 1024 * 1024,
             DEBUG = False
