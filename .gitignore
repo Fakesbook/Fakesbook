@@ -7,3 +7,4 @@ dist/
 db/uploads/*
 *.swp
 *.tar.gz
+*.spec
