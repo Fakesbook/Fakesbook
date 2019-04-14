@@ -10,7 +10,7 @@ hyperlink==18.0.0
 idna==2.7
 incremental==17.5.0
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.10.1
 MarkupSafe==1.0
 networkx==2.1
 pycparser==2.18
