@@ -1,4 +1,4 @@
-from os import listdir, urandom, path, remove as rm_file
+from os import listdir, urandom, path, makedirs, remove as rm_file
 import json
 import bcrypt
 import sqlite3
@@ -76,12 +76,12 @@ def ids_are_friends(id1, id2):
                              or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()[0]
     return is_friend > 0
 
-def create_app():
+def create_app(allow_uploads):
 
     app = Flask(__name__)
 
     app.config.from_mapping(
-            UPLOAD_FOLDER = get_absolute_path("db/uploads"),
+            UPLOAD_DIR = get_absolute_path("db/uploads"),
             PICTURE_DIR = get_absolute_path("db/pictures"),
             SECRET_KEY = urandom(32),
             DATABASE = get_absolute_path('db/app.db'),
@@ -132,7 +132,7 @@ def create_app():
             # else load their own profile in the profile panel
             viewing = id
         return render_template('graph.html', name=username, id=id,
-                viewing=viewing, perms=perms)
+                viewing=viewing, perms=perms, allow_uploads=str(allow_uploads).lower())
 
     @app.route('/login/', methods=["POST"])
     def login():
@@ -239,7 +239,10 @@ def create_app():
                                         (age,gender,phone,fav_color,interests,
                                          hometown,session['username']))
             get_db().commit()
-            return redirect("/profilepicture/")
+            if allow_uploads:
+                return redirect("/")
+            else:
+                return redirect("/profilepicture/")
         return render_template("createaccount.html", target='/accountsetup/',
                 gender="", color="", age="", phone="", interests="", hometown="")
 
@@ -393,7 +396,8 @@ def create_app():
         # hidden.jpg instead of the profile image, but using 
         # direct object references at /pic/<filename> they could
         # bypass privacy settings to view people's profile images
-        return send_from_directory(app.config['PICTURE_DIR'], filename)
+        pic_directory = app.config["PICTURE_DIR"] if path.exists(path.join(app.config["PICTURE_DIR"], filename)) else app.config["UPLOAD_DIR"]
+        return send_from_directory(pic_directory, filename)
 
     @app.route('/profile_upload/', methods=['POST'])
     def profile_pic_upload():
@@ -405,8 +409,13 @@ def create_app():
         if file.filename == '':
             return redirect('/d3/')
         if file and allowed_file(file.filename):
-            fname = secure_filename(file.filename)
-            file.save(path.join(app.config['UPLOAD_FOLDER'], fname))
+            print(file.filename)
+            extension = file.filename.rsplit('.', 1)[1].lower()
+            hasher = sha256()
+            hasher.update(urandom(13))
+            name = hasher.hexdigest()
+            fname = secure_filename(name + "." + extension)
+            file.save(path.join(app.config['UPLOAD_DIR'], fname))
             c = get_db().cursor()
             c.execute("""UPDATE User SET image=? WHERE username=?""",
                             (fname,user))
@@ -427,8 +436,9 @@ def create_app():
         c.execute("""UPDATE User SET image=? WHERE username=?""",
                             ("none",user))
         get_db().commit()
-        if old_img: # delete the old image - TODO shred
-            rm_file(path.join(app.config["UPLOAD_FOLDER"], old_img))
+        file_path = path.join(app.config["UPLOAD_DIR"], old_img)
+        if old_img and path.exists(file_path): # delete the old image - TODO shred
+            rm_file(file_path)
         return redirect('/d3/')
 
     def controlStringToInt(string):
@@ -471,5 +481,5 @@ def shred_file(filename):
 
 if __name__ == '__main__':
     # if running with Make test, enable debug, run on port 8081
-    app = create_app()
+    app = create_app(True)
     app.run(debug=True, port=8081)

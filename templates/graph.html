@@ -363,7 +363,7 @@ label {
     }
 
     var uploadHtml = ""
-    if {{ allow_uploads }} {
+    if ({{ allow_uploads }}) {
         uploadHtml = '<form enctype="multipart/form-data" onChange="this.submit()" style="display:none"'
         + 'action="/profile_upload/" method="post">'
         + '<input id="profile_pic_input" name="profile_image" type="file" />'
