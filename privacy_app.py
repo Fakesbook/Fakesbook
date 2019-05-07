@@ -5,8 +5,7 @@ import bcrypt
 import sqlite3
 from hashlib import sha256
 from base64 import b64encode, b64decode
-from flask import Flask, request, render_template, session, redirect, flash
-from flask import send_from_directory
+from flask import Flask, request, render_template, session, redirect, flash, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "./db/uploads"
@@ -79,10 +78,8 @@ def graph():
     if "username" not in session:
         return redirect('/')
     c = conn.cursor()
-    users = c.execute("""SELECT username,id,gender,image,phone,
-                                fav_color,age,permissions,interests,hometown
+    users = c.execute("""SELECT username,id,permissions
                                 FROM User""").fetchall()
-    friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
     users.sort(key=lambda u: u[1]) # sort by SQL id
     username = session['username']
     try: # get the user object which represents the auth'd user
@@ -91,7 +88,7 @@ def graph():
         session.pop("username")
         return '', 400
     id = me[1]
-    permissions = me[7]
+    permissions = me[2]
     perms = { # Permissions are encoded into a decimal integer
         "image": (permissions//100000),
         "color": (permissions//10000) % 10,
@@ -106,10 +103,56 @@ def graph():
     else:
         # else load their own profile in the profile panel
         viewing = id
-    return render_template('graph.html', users=users, friends=list(friends),
-            name=username, id=id, viewing=viewing, perms=perms)
+    return render_template('graph.html', name=username, id=id,
+            viewing=viewing, perms=perms)
 
-    # returns two values the first representing if the username is valid
+def get_graph(username):
+    c = conn.cursor()
+    users = c.execute("""SELECT username,id FROM User""").fetchall()
+    friends = set(c.execute("""SELECT f1, f2 FROM Friend""").fetchall())
+    users.sort(key=lambda u: u[1]) # sort by SQL id
+
+    nodes = list(map(lambda u: {"id":"Me", "group":u[1]} if u[0] == username else {"id":u[0], "group":u[1]}, users))
+    links = list(map(lambda f: {"source":f[0]-1, "target":f[1]-1, "value":10}, list(friends)))
+
+    return {"nodes" : nodes, "links" : links}
+
+def get_perms(username):
+    c = conn.cursor()
+    user = c.execute("""SELECT id,permissions FROM User where username=? LIMIT 1""",
+                        (username,)).fetchone()
+    id = user[0]
+    permissions = user[1]
+    perms = { # Permissions are encoded into a decimal integer
+        "image": (permissions//100000),
+        "color": (permissions//10000) % 10,
+        "age" : (permissions//1000) % 10,
+        "gender" : (permissions//100) % 10,
+        "interests"   : (permissions// 10) % 10,
+        "hometown": permissions % 10
+        }
+
+    return perms
+
+@app.route('/all_data/')
+def get_all_data():
+    if "username" not in session:
+        return jsonify({})
+    graph = get_graph(session["username"])
+    perms = get_perms(session["username"])
+
+    return jsonify({"graph" : graph, "perms" : perms})
+
+@app.route('/perm_data/')
+def get_perm_data():
+    if "username" not in session:
+        return jsonify({})
+
+    perms = get_perms(session["username"])
+
+    return jsonify({"perms" : perms})
+
+# returns two values the first representing if the username is valid
 # and the second representing if the password is valid
 def checkUsernamePassword(username, input_pw):
     user_pw = selectValue("password", username)
@@ -278,7 +321,7 @@ def addfriend():
         c.execute("""UPDATE User set requests=? where id=?""", 
                  (json.dumps(list(targ_requests)), targ_id))
     conn.commit()
-    return "Success", 200
+    return jsonify({"id": targ_id})
 
 @app.route('/logout/')
 def logout():
@@ -440,7 +483,7 @@ def control_change():
     c.execute("""UPDATE User SET permissions=? WHERE username=?""", (permissions,user))
     conn.commit()
 
-    return "", 200
+    return "Success 200"
 
 @app.route('/admin/')
 def admin():
