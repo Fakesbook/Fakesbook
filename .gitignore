@@ -1,7 +1,10 @@
 .DS_Store
 venv/
+build/
+dist/
 *.db
 *.py[co]
 db/uploads/*
 *.swp
 *.tar.gz
+*.spec
