@@ -3,7 +3,7 @@ import json
 import bcrypt
 import sqlite3
 from hashlib import sha256
-from flask import Flask, request, render_template, session, redirect, flash, send_from_directory
+from flask import Flask, request, render_template, session, redirect, flash, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from db import get_db, init_app
 from config import get_absolute_path

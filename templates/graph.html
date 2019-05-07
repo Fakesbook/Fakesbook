@@ -63,7 +63,6 @@ label {
     //Set up the force layout
     var force = d3.layout.force()
         .charge(-120)
-        .gravity(0.1)
         .linkDistance(250)
         .size([width, height]);
 
@@ -134,7 +133,7 @@ label {
 
     curryData()()
 
-    setTimeout(curryData(), 10000)
+    setTimeout(curryData(), 20000)
 
     function restart(graph) {
         buildSVGGraph(graph)
