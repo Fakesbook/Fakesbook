@@ -26,6 +26,9 @@ def getIPAddress():
         sock.close()
     return ip
 
+def set_allow_uploads(checked):
+    app.config["ALLOW_UPLOADS"] = appgui.getCheckBox(checked)
+
 def launchApp():
     appgui.setLabel("address", "server is running on: " + getIPAddress() + ":" + str(port))
     flask_site = WSGIResource(reactor, reactor.getThreadPool(), app)
@@ -43,6 +46,10 @@ def stopServer():
 def buildGUI():
 
     appgui.addLabel("title", "Fakesbook")
+
+    appgui.addCheckBox("Allow Profile Picture Uploads")
+    appgui.setCheckBoxChangeFunction("Allow Profile Picture Uploads", set_allow_uploads)
+
     appgui.buttons(["Launch"], [launchApp])
 
     appgui.addLabel("address", "server will run on: " + getIPAddress() + ":" + str(port))

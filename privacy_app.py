@@ -71,7 +71,7 @@ def ids_are_friends(id1, id2):
                              or (f1=? and f2=?)""", (id1, id2, id2, id1)).fetchone()[0]
     return is_friend > 0
 
-def create_app(allow_uploads):
+def create_app():
 
     app = Flask(__name__)
 
@@ -84,6 +84,7 @@ def create_app(allow_uploads):
             # 8 megabyte images, at most
             MAX_CONTENT_LENGTH = 8 * 1024 * 1024 * 1024,
             ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']),
+            ALLOW_UPLOADS = False,
             DEBUG = False
     )
 
@@ -133,7 +134,7 @@ def create_app(allow_uploads):
             # else load their own profile in the profile panel
             viewing = id
         return render_template('graph.html', name=username, id=id,
-                viewing=viewing, perms=perms, allow_uploads=str(allow_uploads).lower())
+                viewing=viewing, perms=perms, allow_uploads=str(app.config["ALLOW_UPLOADS"]).lower())
 
     @app.route('/login/', methods=["POST"])
     def login():
@@ -240,7 +241,7 @@ def create_app(allow_uploads):
                                         (age,gender,phone,fav_color,interests,
                                          hometown,session['username']))
             get_db().commit()
-            if allow_uploads:
+            if app.config["ALLOW_UPLOADS"]:
                 return redirect("/")
             else:
                 return redirect("/profilepicture/")
@@ -481,5 +482,6 @@ def shred_file(filename):
 
 if __name__ == '__main__':
     # if running with Make test, enable debug, run on port 8081
-    app = create_app(True)
+    app = create_app()
+    app.config["ALLOW_UPLOADS"] = True
     app.run(debug=True, port=8081)
