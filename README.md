@@ -6,8 +6,20 @@ A teaching platform designed to enable visualization of social networking graphs
 ![Creative Commons Attribution-ShareAlike 4.0 International License](https://i.creativecommons.org/l/by-sa/4.0/88x31.png "CC BY")
 This work is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License (CC BY)](https://creativecommons.org/licenses/by/4.0/).
 
-Setup and Installation
+Getting started
+------
+Go to the github [releases page](https://github.com/Fakesbook/Fakesbook/releases) and download the latest release for your platform
+
+Launch the application and have fun playing with the tool!
+
+Contributing
 -----
+If you encounter a problem while using Fakesbook, then please file an issue on [giihub](https://github.com/Fakesbook/Fakesbook/issues).
+
+We would love and contributions that you want to make to the project!
+If you have something that you want to add then you should fork the project, make a branch on your fork with the changes and then make a pull request here.
+
+## Developing with Fakesbook
 
 ### Requirements
 #### Note: Fakesbook has only been tested on MacOS and the most recent releases of Ubuntu.
@@ -41,7 +53,7 @@ Clone this repository to your desired location and navigate to the repository in
 
 Then setup a virtual environment to contain all of the dependencies for the platform.
 ```bash
-$ virtualenv -p$(which python3) venv # only do this once
+$ virtualenv -p$(which python3) venv
 ```
 
 Next activate the virtual environment and install the requirements.
@@ -61,38 +73,21 @@ $ source venv/bin/activate
 
 Now you can start a test environment on `localhost:8081` by running:
 ```bash
-$ make test
+$ python privacy_app.py
 ```
 
-Or you can start a production environement on `localhost:8080` by running:
+Or you can start the gui application by running:
 ```bash
-make run
+$ python fakesbook.py
 ```
 
-When you are done running either environment use `$ deactivate` to exit the virtualenv.
+When you are done running the application use `$ deactivate` to exit the virtualenv.
 
-Using other Utilities
------------
-
-**Reseting a user password**
+To build an application bundle you can run:
 ```bash
-$ python reset_password.py app.db # or wherever the app database is
+$ ./pyinstaller.sh
 ```
-
-**Save a database**
-```bash
-$ python save_db.py path/to/database/directory <name of save file>
-```
-
-**Load a database**
-```bash
-$ python load_db.py <name of save file> path/to/database/directory
-```
-
-**Generate a database**
-```bash
-$ python populate_db.py <name of database file> <name of admin user> # the admin user's name will be used as the password
-```
+The application should be placed at `dist/fakesbook`
 
 -----------
 The example profile pictures are in the public domain and can be found at [pexels.com](https://www.pexels.com/).
