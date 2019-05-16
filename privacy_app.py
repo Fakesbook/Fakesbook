@@ -8,12 +8,7 @@ from werkzeug.utils import secure_filename
 from db import get_db, init_app
 from config import get_absolute_path
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']),
 
-def allowed_file(filename):
-    """ Checks a user image upload for having the correct file extension """
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def selectValue(value, user):
     """ get an attribute from the database, given a value name and a user """
@@ -88,12 +83,18 @@ def create_app(allow_uploads):
             DB_SCHEMA = get_absolute_path('db/schema.sql'),
             # 8 megabyte images, at most
             MAX_CONTENT_LENGTH = 8 * 1024 * 1024 * 1024,
+            ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']),
             DEBUG = False
     )
 
     # establish a connection to the database file
     with app.app_context():
         init_app(app)
+
+    def allowed_file(filename):
+        """ Checks a user image upload for having the correct file extension """
+        return '.' in filename and \
+                filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
     @app.route('/')
     def home():
@@ -409,7 +410,6 @@ def create_app(allow_uploads):
         if file.filename == '':
             return redirect('/d3/')
         if file and allowed_file(file.filename):
-            print(file.filename)
             extension = file.filename.rsplit('.', 1)[1].lower()
             hasher = sha256()
             hasher.update(urandom(13))
