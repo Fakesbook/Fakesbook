@@ -14,9 +14,9 @@ Launch the application and have fun playing with the tool!
 
 Contributing
 -----
-If you encounter a problem while using Fakesbook, then please file an issue on [giihub](https://github.com/Fakesbook/Fakesbook/issues).
+If you encounter a problem while using Fakesbook, then please file an issue on [github](https://github.com/Fakesbook/Fakesbook/issues).
 
-We would love and contributions that you want to make to the project!
+We would love any contributions that you want to make to the project!
 If you have something that you want to add then you should fork the project, make a branch on your fork with the changes and then make a pull request here.
 
 ## Developing with Fakesbook
