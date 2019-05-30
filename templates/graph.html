@@ -80,8 +80,6 @@ label {
     //Create a dict logging what is connected to what
     var linkedByIndex = {};
 
-    var quadtree = d3.geom.quadtree([]);
-
     var perms = {};
 
     // get graph data
@@ -133,94 +131,94 @@ label {
 
     curryData()()
 
-    setTimeout(curryData(), 20000)
+    setTimeout(curryData(), 200000)
 
     function restart(graph) {
         buildSVGGraph(graph)
         buildLinkedIndex(graph)
-        quadtree = d3.geom.quadtree(graph.nodes);
     }
+
 
     //Creates the graph data structure out of the json data
-    function buildSVGGraph(graph) {
-        force.nodes(graph.nodes)
-            .links(graph.links)
+function buildSVGGraph(graph) {
+    force.nodes(graph.nodes)
+        .links(graph.links)
 
-        graph.nodes.forEach(function (n) {
-            node.attr("cx", function (d) {
-                if (d.id == n.id) {
-                    n.x = d.x;
-                }
-                return d.x
-            }).attr("cy", function (d) {
-                if (d.id == n.id) {
-                    n.y = d.y;
-                }
-                return d.y;
-            });
-        })
+    graph.nodes.forEach(function (n) {
+        node.attr("cx", function (d) {
+            if (d.id == n.id) {
+                n.x = d.x;
+            }
+            return d.x
+        }).attr("cy", function (d) {
+            if (d.id == n.id) {
+                n.y = d.y;
+            }
+            return d.y;
+        });
+    })
 
-        graph.links.forEach(function (l) {
-            link.attr("x1", function (d) {
-                if (d.source.index == l.source.index) {
-                    l.source.x = d.source.x
-                }
+    graph.links.forEach(function (l) {
+        link.attr("x1", function (d) {
+            if (d.source.index == l.source.index) {
+                l.source.x = d.source.x
                 return d.source.x;
-            })
-                .attr("y1", function (d) {
-                    if (d.source.index == l.source.index) {
-                        l.source.y = d.source.y
-                    }
-                    return d.source.y;
-                })
-                .attr("x2", function (d) {
-                    if (d.target.index == l.target.index) {
-                        l.source.x = d.source.x
-                    }
-                    return d.target.x;
-                })
-                .attr("y2", function (d) {
-                    if (d.target.index == l.target.index) {
-                        l.source.y = d.source.y
-                    }
-                    return d.target.y;
-                });
+            }
         })
-
-        svg.selectAll(".node").remove()
-        svg.selectAll(".link").remove()
-
-        link = svg.selectAll(".link")
-        node = svg.selectAll(".node")
-
-        link = link.data(force.links())
-        link.enter().append("line")
-            .attr("class", "link")
-            .style("stroke-width", function (d) {
-                return Math.sqrt(d.value);
+            .attr("y1", function (d) {
+                if (d.source.index == l.source.index) {
+                    l.source.y = d.source.y
+                    return d.source.y;
+                }
+            })
+            .attr("x2", function (d) {
+                if (d.target.index == l.target.index) {
+                    l.source.x = d.source.x
+                    return d.target.x;
+                }
+            })
+            .attr("y2", function (d) {
+                if (d.target.index == l.target.index) {
+                    l.source.y = d.source.y
+                    return d.target.y;
+                }
             });
+    })
+
+    svg.selectAll(".node").remove()
+    svg.selectAll(".link").remove()
+
+    link = svg.selectAll(".link")
+    node = svg.selectAll(".node")
+
+    link = link.data(force.links())
+    link.enter().append("line")
+        .attr("class", "link")
+        .style("stroke-width", function (d) {
+            return Math.sqrt(d.value);
+        });
 
 
-        node = node.data(graph.nodes)
-        node.enter().append("g")
-            .attr("class", "node")
-            .call(drag)
-            .on('click', highlightNode);
+    node = node.data(graph.nodes)
+    node.enter().append("g")
+        .attr("class", "node")
+        .call(drag)
+        .on('click', highlightNode);
 
-        node.append("circle")
-            .attr("r", nodeRadius)
-            .style("fill", function (d) {
-                return color(d.group);
-            });
+    node.append("circle")
+        .attr("r", nodeRadius)
+        .style("fill", function (d) {
+            return color(d.group);
+        });
 
-        node.append("text")
-            .attr("dx", nodeRadius + 4)
-            .attr("dy", 10)
-            .text(function(d) { return d.id })
-            .style("stroke", "black");
+    node.append("text")
+        .attr("dx", nodeRadius + 4)
+        .attr("dy", 10)
+        .text(function(d) { return d.id })
+        .style("stroke", "black");
 
-        force.start()
-    }
+    force.start()
+}
 
     function buildLinkedIndex(graph) {
         for (i = 0; i < graph.nodes.length; i++) {
@@ -233,6 +231,7 @@ label {
     }
 
     function collide(alpha) {
+        var quadtree = d3.geom.quadtree(node.data());
         return function(d) {
             var padding = 120
             var rb = 2*nodeRadius + padding,
