@@ -217,6 +217,17 @@ function buildSVGGraph(graph) {
         .text(function(d) { return d.id })
         .style("stroke", "black");
 
+	node.on("mouseover", (d, i) => {
+		link.filter(function(l) {
+			return d.id !== l.source.id && d.id !== l.target.id
+		}).style('opacity', 0.25)
+	})
+
+	node.on("mouseout", (d, i) => {
+		link.filter(function(l) {
+			return d.id !== l.source.id && d.id !== l.target.id
+		}).style('opacity', 1)
+	})
     force.start()
 }
 
