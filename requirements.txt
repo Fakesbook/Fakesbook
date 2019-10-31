@@ -18,7 +18,7 @@ PyHamcrest==1.9.0
 six==1.11.0
 Twisted==18.7.0
 uWSGI==2.0.17.1 ; "linux" in sys_platform
-Werkzeug==0.14.1
+Werkzeug==0.15.3
 zope.interface==4.5.0
 PyInstaller==3.4
 appjar==0.93
