@@ -16,7 +16,7 @@ networkx==2.1
 pycparser==2.18
 PyHamcrest==1.9.0
 six==1.11.0
-Twisted==18.7.0
+Twisted==19.7.0
 uWSGI==2.0.17.1 ; "linux" in sys_platform
 Werkzeug==0.15.3
 zope.interface==4.5.0
